@@ -68,8 +68,8 @@ public class Main {
         }
 
         System.out.println("Select Account Type:");
-        System.out.println("1. Savings");
-        System.out.println("2. Checking");
+        System.out.println("1. Savings (Interest Rate: 3.5, Minimum Balance: $500)");
+        System.out.println("2. Checking (Overdraft: $1000, Monthly Fee: $10)");
         int accountTypeChoice = getIntInput("Enter choice: ");
 
         double initialDeposit = getDoubleInput("Enter Initial Deposit: ");
