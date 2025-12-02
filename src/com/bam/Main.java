@@ -132,8 +132,12 @@ public class Main {
             if (!isConfirmed) {
                 return;
             }
-            account.deposit(amount);
-            success = !(amount <= 0);
+//            account.deposit(amount);
+            if(amount > 0){
+                account.processTransaction(amount, type.toLowerCase());
+            }else{
+                System.out.println("Deposit amount must be greater than zero.");
+            }
         } else if (typeChoice == 2) {
             type = "Withdrawal";
             txn = new Transaction(account.getAccountNumber(), type, amount, account.getBalance() - amount);
@@ -141,7 +145,8 @@ public class Main {
             if(!isConfirmed){
                 return;
             }
-            success = account.withdraw(amount);
+//          success = account.withdraw(amount);
+            success = account.processTransaction(amount, type.toLowerCase());
         } else {
             System.out.println("Invalid transaction type.");
             return;
@@ -151,6 +156,8 @@ public class Main {
             transactionManager.addTransaction(txn);
             System.out.println("Transaction recorded.");
         }
+        System.out.println("Press Enter to continue...");
+        scanner.nextLine(); //
     }
 
     private static void viewTransactionHistory() {
