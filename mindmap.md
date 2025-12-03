@@ -21,4 +21,9 @@
       - `private String accountHolderName;`: Name of the account holder
   - Methods
   - ``
-  - 
+
+Changes to make:
+Validate some of the data inputted by the user
+Organize the code into packages for better structure
+use the processTransaction method in handling the transactions
+Show better error messages
