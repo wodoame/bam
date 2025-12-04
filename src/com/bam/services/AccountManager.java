@@ -1,6 +1,9 @@
 package com.bam.services;
 
+import com.bam.exceptions.InvalidAccountException;
 import com.bam.models.Account;
+import com.bam.models.RegularCustomer;
+import com.bam.models.SavingsAccount;
 
 import java.util.Scanner;
 
@@ -13,13 +16,20 @@ public class AccountManager {
         this.accountCount = 0;
     }
 
+    // By default, this method should show success message and the customer details
     public void addAccount(Account account) {
+        addAccount(account, false);
+    }
+
+    public void addAccount(Account account, boolean silent) {
         if (accountCount < accounts.length) {
             accounts[accountCount++] = account;
-            System.out.println("\nAccount created successfully!");
-            account.displayAccountDetails();
-            System.out.println("\nPress Enter to continue...");
-            new Scanner(System.in).nextLine();
+            if (!silent) {
+                System.out.println("\nAccount created successfully!");
+                account.displayAccountDetails();
+                System.out.println("\nPress Enter to continue...");
+                new Scanner(System.in).nextLine();
+            }
         } else {
             System.out.println("Account limit reached. Cannot create new account.");
         }
@@ -31,7 +41,7 @@ public class AccountManager {
                 return accounts[i];
             }
         }
-        return null;
+        throw new InvalidAccountException("Account number " + accountNumber + " not found.");
     }
 
     public void viewAllAccounts() {
@@ -66,6 +76,15 @@ public class AccountManager {
             total += accounts[i].getBalance();
         }
         return total;
+    }
+
+    public void generateSeedAccounts(AccountManager acm) {
+        String[] names = {"Bernard", "Alice", "John", "Diana", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack"};
+        for (String name: names){
+            RegularCustomer customer = new RegularCustomer(name, 30, "0123456789", "Accra, Ghana");
+            SavingsAccount account = new SavingsAccount(customer, 100.0);
+            acm.addAccount(account, true);
+        }
     }
 
     public int getAccountCount() {

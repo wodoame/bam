@@ -13,6 +13,7 @@ public class Main {
     private static final TransactionManager transactionManager = new TransactionManager();
 
     public static void main(String[] args) {
+        accountManager.generateSeedAccounts(accountManager);
         boolean exit = false;
         while (!exit) {
             printMenu();
@@ -57,8 +58,8 @@ public class Main {
         System.out.println("2. Premium");
         int customerTypeChoice = inputHandler.getIntInput("Enter choice: ", "Choice must be a number");
 
-        String name = inputHandler.getStringInput("Enter Customer Name: ");
-        int age = inputHandler.getIntInput("Enter Age: ", "Age must be a number");
+        String name = inputHandler.getName("Enter Customer Name: ");
+        int age = inputHandler.getAge("Enter Age: ");
         String contact = inputHandler.getStringInput("Enter Contact Number: ");
         String address = inputHandler.getStringInput("Enter Address: ");
 
@@ -112,19 +113,11 @@ public class Main {
     }
     private static void processTransaction() {
         System.out.println("\n--- Process Transaction ---");
-        String accountNumber = inputHandler.getStringInput("Enter Account Number: ");
-        Account account = accountManager.findAccount(accountNumber);
-
-        if (account == null) {
-            System.out.println("Account not found.");
-            return;
-        }
-
+        Account account = inputHandler.getAccount("Enter Account Number: ", accountManager);
         System.out.println("Select Transaction Type:");
         System.out.println("1. Deposit");
         System.out.println("2. Withdrawal");
         int typeChoice = inputHandler.getIntInput("Enter choice: ", "Choice must be a number");
-
         double amount = inputHandler.getDoubleInput("Enter Amount: " , "Amount must be a number");
         Transaction txn;
 

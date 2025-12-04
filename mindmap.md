@@ -32,3 +32,7 @@ Show better error messages
 Changes I've made:
 1. Used `processTransaction` method in performing transactions. It replaced the direct use of `deposit` and `withdraw` methods
 2. Created an `InputHandler` class to validate user inputs
+3. Added input validation to the `InputHandler` class. Some inputs such as the age and name of the customer are now validated
+4. Create custom exceptions such as `InvalidAccountException` to handle wrong inputs
+5. Add Seed data for accounts
+6. 
