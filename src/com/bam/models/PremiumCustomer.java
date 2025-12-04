@@ -1,4 +1,4 @@
-package com.bam;
+package com.bam.models;
 
 public class PremiumCustomer extends Customer {
     private final double minimumBalanceRequirement = 10000.0;

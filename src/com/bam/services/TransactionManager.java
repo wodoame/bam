@@ -1,4 +1,6 @@
-package com.bam;
+package com.bam.services;
+
+import com.bam.models.Transaction;
 
 import java.util.Scanner;
 

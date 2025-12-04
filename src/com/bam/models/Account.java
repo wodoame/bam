@@ -1,4 +1,6 @@
-package com.bam;
+package com.bam.models;
+
+import com.bam.interfaces.Transactable;
 
 public abstract class Account implements Transactable {
     protected String accountNumber;

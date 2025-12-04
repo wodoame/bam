@@ -1,4 +1,4 @@
-package com.bam;
+package com.bam.models;
 
 public abstract class Customer {
     protected String customerId;

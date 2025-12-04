@@ -1,4 +1,4 @@
-package com.bam;
+package com.bam.models;
 
 import java.util.Date;
 

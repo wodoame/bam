@@ -1,17 +1,22 @@
 package com.bam;
 
+import com.bam.models.*;
+import com.bam.services.AccountManager;
+import com.bam.services.TransactionManager;
+import com.bam.utils.InputHandler;
+
 import java.util.Scanner;
 
 public class Main {
+    private static final InputHandler inputHandler = new InputHandler();
     private static final AccountManager accountManager = new AccountManager();
     private static final TransactionManager transactionManager = new TransactionManager();
-    private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
         boolean exit = false;
         while (!exit) {
             printMenu();
-            int choice = getIntInput("Enter your choice: ");
+            int choice = inputHandler.getIntInput("Enter your choice: ", "Choice must be a number");
             switch (choice) {
                 case 1:
                     createAccount();
@@ -33,7 +38,7 @@ public class Main {
                     System.out.println("Invalid choice. Please try again.");
             }
         }
-        scanner.close();
+        inputHandler.closeScanner();
     }
 
     private static void printMenu() {
@@ -50,12 +55,12 @@ public class Main {
         System.out.println("Select Customer Type:");
         System.out.println("1. Regular");
         System.out.println("2. Premium");
-        int customerTypeChoice = getIntInput("Enter choice: ");
+        int customerTypeChoice = inputHandler.getIntInput("Enter choice: ", "Choice must be a number");
 
-        String name = getStringInput("Enter Customer Name: ");
-        int age = getIntInput("Enter Age: ");
-        String contact = getStringInput("Enter Contact Number: ");
-        String address = getStringInput("Enter Address: ");
+        String name = inputHandler.getStringInput("Enter Customer Name: ");
+        int age = inputHandler.getIntInput("Enter Age: ", "Age must be a number");
+        String contact = inputHandler.getStringInput("Enter Contact Number: ");
+        String address = inputHandler.getStringInput("Enter Address: ");
 
         Customer customer;
         if (customerTypeChoice == 1) {
@@ -70,9 +75,9 @@ public class Main {
         System.out.println("Select Account Type:");
         System.out.println("1. Savings (Interest Rate: 3.5, Minimum Balance: $500)");
         System.out.println("2. Checking (Overdraft: $1000, Monthly Fee: $10)");
-        int accountTypeChoice = getIntInput("Enter choice: ");
+        int accountTypeChoice = inputHandler.getIntInput("Enter choice: ", "Choice must be a number");
 
-        double initialDeposit = getDoubleInput("Enter Initial Deposit: ");
+        double initialDeposit = inputHandler.getDoubleInput("Enter Initial Deposit: ", "Deposit must be a number");
 
         Account account = null;
         if (accountTypeChoice == 1) {
@@ -98,7 +103,7 @@ public class Main {
         System.out.println("\nTRANSACTION CONFIRMATION");
         System.out.println("________________________________");
         txn.displayTransactionDetails();
-        String confirmationChoice = getStringInput("Confirm transaction? (Y/N): ");
+        String confirmationChoice = inputHandler.getStringInput("Confirm transaction? (Y/N): ");
         if (!confirmationChoice.equalsIgnoreCase("Y")) {
             System.out.println("Transaction cancelled.");
             return false;
@@ -107,7 +112,7 @@ public class Main {
     }
     private static void processTransaction() {
         System.out.println("\n--- Process Transaction ---");
-        String accountNumber = getStringInput("Enter Account Number: ");
+        String accountNumber = inputHandler.getStringInput("Enter Account Number: ");
         Account account = accountManager.findAccount(accountNumber);
 
         if (account == null) {
@@ -118,9 +123,9 @@ public class Main {
         System.out.println("Select Transaction Type:");
         System.out.println("1. Deposit");
         System.out.println("2. Withdrawal");
-        int typeChoice = getIntInput("Enter choice: ");
+        int typeChoice = inputHandler.getIntInput("Enter choice: ", "Choice must be a number");
 
-        double amount = getDoubleInput("Enter Amount: ");
+        double amount = inputHandler.getDoubleInput("Enter Amount: " , "Amount must be a number");
         Transaction txn;
 
         boolean success = false;
@@ -132,9 +137,8 @@ public class Main {
             if (!isConfirmed) {
                 return;
             }
-//            account.deposit(amount);
             if(amount > 0){
-                account.processTransaction(amount, type.toLowerCase());
+                account.processTransaction(amount, type);
             }else{
                 System.out.println("Deposit amount must be greater than zero.");
             }
@@ -145,8 +149,7 @@ public class Main {
             if(!isConfirmed){
                 return;
             }
-//          success = account.withdraw(amount);
-            success = account.processTransaction(amount, type.toLowerCase());
+            success = account.processTransaction(amount, type);
         } else {
             System.out.println("Invalid transaction type.");
             return;
@@ -157,11 +160,11 @@ public class Main {
             System.out.println("Transaction recorded.");
         }
         System.out.println("Press Enter to continue...");
-        scanner.nextLine(); //
+        new Scanner(System.in).nextLine();
     }
 
     private static void viewTransactionHistory() {
-        String accountNumber = getStringInput("Enter Account Number: ");
+        String accountNumber = inputHandler.getStringInput("Enter Account Number: ");
         Account account = accountManager.findAccount(accountNumber);
 
         if (account == null) {
@@ -170,33 +173,5 @@ public class Main {
         }
 
         transactionManager.viewTransactionsByAccount(accountNumber);
-    }
-
-    // Helper methods for input
-    private static String getStringInput(String prompt) {
-        System.out.print(prompt);
-        return scanner.nextLine();
-    }
-
-    private static int getIntInput(String prompt) {
-        System.out.print(prompt);
-        while (!scanner.hasNextInt()) {
-            System.out.print("Invalid input. " + prompt);
-            scanner.next(); // consume bad input
-        }
-        int input = scanner.nextInt();
-        scanner.nextLine(); // consume newline
-        return input;
-    }
-
-    private static double getDoubleInput(String prompt) {
-        System.out.print(prompt);
-        while (!scanner.hasNextDouble()) {
-            System.out.print("Invalid input. " + prompt);
-            scanner.next(); // consume bad input
-        }
-        double input = scanner.nextDouble();
-        scanner.nextLine(); // consume newline
-        return input;
     }
 }

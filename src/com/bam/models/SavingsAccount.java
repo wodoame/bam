@@ -1,4 +1,4 @@
-package com.bam;
+package com.bam.models;
 
 public class SavingsAccount extends Account {
     private final double interestRate;

@@ -28,3 +28,7 @@ Validate some of the data inputted by the user
 Organize the code into packages for better structure
 use the processTransaction method in handling the transactions
 Show better error messages
+
+Changes I've made:
+1. Used `processTransaction` method in performing transactions. It replaced the direct use of `deposit` and `withdraw` methods
+2. Created an `InputHandler` class to validate user inputs

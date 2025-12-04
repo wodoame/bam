@@ -1,4 +1,4 @@
-package com.bam;
+package com.bam.models;
 
 public class RegularCustomer extends Customer {
 
