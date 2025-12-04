@@ -13,7 +13,7 @@ public class Main {
     private static final TransactionManager transactionManager = new TransactionManager();
 
     public static void main(String[] args) {
-        accountManager.generateSeedAccounts(accountManager);
+        accountManager.generateSeedAccounts();
         boolean exit = false;
         while (!exit) {
             printMenu();

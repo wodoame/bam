@@ -29,10 +29,28 @@ Organize the code into packages for better structure
 use the processTransaction method in handling the transactions
 Show better error messages
 
+Git:
+Create branches for different features
+
+Testing:
+Write unit tests for critical methods
+
+Extras:
+Add functionality to view transaction history for each account and each account details
+
+Exceptions:
+- validate withdrawals (e.g., insufficient funds)
+- `InvalidAccountException`: Custom exception for invalid account operations
+- `InsufficientFundsException`: Custom exception for insufficient funds during withdrawal
+- `InvalidAgeException`: Custom exception for invalid age input
+- `InsufficientInitialDepositException`: Custom exception for invalid age input
+- `InvalidContactException`: Custom exception for invalid age input
+- `InvalidNameException`: Custom exception for invalid age input
+
+
 Changes I've made:
 1. Used `processTransaction` method in performing transactions. It replaced the direct use of `deposit` and `withdraw` methods
 2. Created an `InputHandler` class to validate user inputs
 3. Added input validation to the `InputHandler` class. Some inputs such as the age and name of the customer are now validated
 4. Create custom exceptions such as `InvalidAccountException` to handle wrong inputs
 5. Add Seed data for accounts
-6. 

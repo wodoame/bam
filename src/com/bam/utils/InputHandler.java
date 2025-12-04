@@ -74,7 +74,7 @@ public class InputHandler {
                  account = acm.findAccount(accountNumber);
                  return account;
             } catch (InvalidAccountException e) {
-                System.out.println("Account not found. Please enter a valid account number.");
+                System.out.println("Account not found. Please check the account number and try again.");
             }
         }
     }

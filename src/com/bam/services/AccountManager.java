@@ -78,12 +78,12 @@ public class AccountManager {
         return total;
     }
 
-    public void generateSeedAccounts(AccountManager acm) {
+    public void generateSeedAccounts() {
         String[] names = {"Bernard", "Alice", "John", "Diana", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack"};
         for (String name: names){
             RegularCustomer customer = new RegularCustomer(name, 30, "0123456789", "Accra, Ghana");
             SavingsAccount account = new SavingsAccount(customer, 100.0);
-            acm.addAccount(account, true);
+            addAccount(account, true);
         }
     }
 
