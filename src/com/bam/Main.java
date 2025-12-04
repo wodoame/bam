@@ -56,44 +56,33 @@ public class Main {
         System.out.println("Select Customer Type:");
         System.out.println("1. Regular");
         System.out.println("2. Premium");
-        int customerTypeChoice = inputHandler.getIntInput("Enter choice: ", "Choice must be a number");
-
+        int customerTypeChoice = inputHandler.getCustomerTypeChoice("Enter choice: ");
         String name = inputHandler.getName("Enter Customer Name: ");
         int age = inputHandler.getAge("Enter Age: ");
-        String contact = inputHandler.getStringInput("Enter Contact Number: ");
+        String contact = inputHandler.getContact("Enter Contact Number: ");
         String address = inputHandler.getStringInput("Enter Address: ");
 
         Customer customer;
         if (customerTypeChoice == 1) {
             customer = new RegularCustomer(name, age, contact, address);
-        } else if (customerTypeChoice == 2) {
+        } else{
             customer = new PremiumCustomer(name, age, contact, address);
-        } else {
-            System.out.println("Invalid customer type selected.");
-            return;
         }
 
         System.out.println("Select Account Type:");
         System.out.println("1. Savings (Interest Rate: 3.5, Minimum Balance: $500)");
         System.out.println("2. Checking (Overdraft: $1000, Monthly Fee: $10)");
-        int accountTypeChoice = inputHandler.getIntInput("Enter choice: ", "Choice must be a number");
-
-        double initialDeposit = inputHandler.getDoubleInput("Enter Initial Deposit: ", "Deposit must be a number");
+        int accountTypeChoice = inputHandler.getAccountTypeChoice("Enter choice: ");
+        double initialDeposit;
 
         Account account = null;
         if (accountTypeChoice == 1) {
-            if (initialDeposit < 500) {
-                System.out.println("Minimum balance for Savings Account is $500.");
-                return;
-            }
+            initialDeposit = inputHandler.getInitialDeposit("Enter Initial Deposit: ", "savings");
             account = new SavingsAccount(customer, initialDeposit);
-        } else if (accountTypeChoice == 2) {
+        } else{
+            initialDeposit = inputHandler.getInitialDeposit("Enter Initial Deposit: ", "checking");
             account = new CheckingAccount(customer, initialDeposit);
-        } else {
-            System.out.println("Invalid account type selected.");
-            return;
         }
-
         accountManager.addAccount(account);
         // Initial deposit transaction
         Transaction txn = new Transaction(account.getAccountNumber(), "Deposit", initialDeposit, account.getBalance());

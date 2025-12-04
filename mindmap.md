@@ -39,6 +39,7 @@ Extras:
 Add functionality to view transaction history for each account and each account details
 
 Exceptions:
+- Example methods affected are: `getName`, `getContact`, `getAccount`, etc.
 - validate withdrawals (e.g., insufficient funds)
 - `InvalidAccountException`: Custom exception for invalid account operations
 - `InsufficientFundsException`: Custom exception for insufficient funds during withdrawal
@@ -46,6 +47,7 @@ Exceptions:
 - `InsufficientInitialDepositException`: Custom exception for invalid age input
 - `InvalidContactException`: Custom exception for invalid age input
 - `InvalidNameException`: Custom exception for invalid age input
+- Add exceptions for invalid choices in the menu
 
 
 Changes I've made:

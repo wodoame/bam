@@ -3,11 +3,12 @@ package com.bam.models;
 public class SavingsAccount extends Account {
     private final double interestRate;
     private final double minimumBalance;
+    public static final double MINIMUM_BALANCE = 500.0;
 
     public SavingsAccount(Customer customer, double initialDeposit) {
         super(customer, initialDeposit);
         this.interestRate = 3.5;
-        this.minimumBalance = 500.0;
+        this.minimumBalance = MINIMUM_BALANCE;
     }
 
     @Override
