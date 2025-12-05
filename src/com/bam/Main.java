@@ -1,5 +1,6 @@
 package com.bam;
 
+import com.bam.exceptions.InvalidAccountException;
 import com.bam.models.*;
 import com.bam.services.AccountManager;
 import com.bam.services.TransactionManager;
@@ -65,7 +66,7 @@ public class Main {
         Customer customer;
         if (customerTypeChoice == 1) {
             customer = new RegularCustomer(name, age, contact, address);
-        } else{
+        } else {
             customer = new PremiumCustomer(name, age, contact, address);
         }
 
@@ -79,7 +80,7 @@ public class Main {
         if (accountTypeChoice == 1) {
             initialDeposit = inputHandler.getInitialDeposit("Enter Initial Deposit: ", "savings");
             account = new SavingsAccount(customer, initialDeposit);
-        } else{
+        } else {
             initialDeposit = inputHandler.getInitialDeposit("Enter Initial Deposit: ", "checking");
             account = new CheckingAccount(customer, initialDeposit);
         }
@@ -100,42 +101,33 @@ public class Main {
         }
         return true;
     }
+
     private static void processTransaction() {
         System.out.println("\n--- Process Transaction ---");
         Account account = inputHandler.getAccount("Enter Account Number: ", accountManager);
         System.out.println("Select Transaction Type:");
         System.out.println("1. Deposit");
         System.out.println("2. Withdrawal");
-        int typeChoice = inputHandler.getIntInput("Enter choice: ", "Choice must be a number");
-        double amount = inputHandler.getDoubleInput("Enter Amount: " , "Amount must be a number");
         Transaction txn;
-
-        boolean success = false;
-        String type = "";
+        String type;
+        double amount;
+        boolean success;
+        int typeChoice = inputHandler.getTransactionTypeChoice("Enter choice: ");
         if (typeChoice == 1) {
             type = "Deposit";
+            amount = inputHandler.getDepositAmount("Enter Amount: ");
             txn = new Transaction(account.getAccountNumber(), type, amount, account.getBalance() + amount);
-            boolean isConfirmed = showTransactionConfirmationPrompt(txn);
-            if (!isConfirmed) {
-                return;
-            }
-            if(amount > 0){
-                account.processTransaction(amount, type);
-            }else{
-                System.out.println("Deposit amount must be greater than zero.");
-            }
-        } else if (typeChoice == 2) {
+
+        } else {
+            amount = inputHandler.getWithdrawalAmount("Enter Amount: ");
             type = "Withdrawal";
             txn = new Transaction(account.getAccountNumber(), type, amount, account.getBalance() - amount);
-            boolean isConfirmed = showTransactionConfirmationPrompt(txn);
-            if(!isConfirmed){
-                return;
-            }
-            success = account.processTransaction(amount, type);
-        } else {
-            System.out.println("Invalid transaction type.");
+        }
+        boolean isConfirmed = showTransactionConfirmationPrompt(txn);
+        if (!isConfirmed) {
             return;
         }
+        success = account.processTransaction(amount, type);
 
         if (success) {
             transactionManager.addTransaction(txn);
@@ -147,13 +139,11 @@ public class Main {
 
     private static void viewTransactionHistory() {
         String accountNumber = inputHandler.getStringInput("Enter Account Number: ");
-        Account account = accountManager.findAccount(accountNumber);
-
-        if (account == null) {
-            System.out.println("Account not found.");
-            return;
+        try {
+            accountManager.findAccount(accountNumber);
+            transactionManager.viewTransactionsByAccount(accountNumber);
+        } catch (InvalidAccountException e) {
+            System.out.println(e.getMessage());
         }
-
-        transactionManager.viewTransactionsByAccount(accountNumber);
     }
 }

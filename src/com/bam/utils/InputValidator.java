@@ -4,8 +4,8 @@ import com.bam.models.SavingsAccount;
 
 public class InputValidator {
     public void validateAge(int age) {
-        if (age < 18 || age > 100) {
-            throw new InvalidAgeException("Age must be between 18 and 100.");
+        if (age < 18 ) {
+            throw new InvalidAgeException("You must be at least 18 years old to create an account.");
         }
     }
 
@@ -41,6 +41,24 @@ public class InputValidator {
     public void validateCustomerTypeChoice(int choice){
         if (choice != 1 && choice != 2) {
             throw new InvalidChoiceException("Please select a valid option (1 or 2)");
+        }
+    }
+
+    public void validateTransactionTypeChoice(int choice){
+        if (choice != 1 && choice != 2) {
+            throw new InvalidChoiceException("Please select a valid option (1 or 2)");
+        }
+    }
+
+    public void validateDepositAmount(double amount) {
+        if (amount <= 0) {
+            throw new InvalidDepositAmountException("Deposit amount must be greater than zero.");
+        }
+    }
+
+    public void validateWithdrawalAmount(double amount) {
+        if (amount <= 0) {
+            throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");
         }
     }
 }

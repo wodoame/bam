@@ -21,6 +21,8 @@
       - `private String accountHolderName;`: Name of the account holder
   - Methods
   - ``
+`InputHandler` class accepts inputs in their correct format with an error message if the format does not match
+`InputValidator` class validates the inputs provided by the user
 
 Changes to make:
 Create some seed data
@@ -56,3 +58,8 @@ Changes I've made:
 3. Added input validation to the `InputHandler` class. Some inputs such as the age and name of the customer are now validated
 4. Create custom exceptions such as `InvalidAccountException` to handle wrong inputs
 5. Add Seed data for accounts
+
+Random:
+Show confirmation messages only when amount is valid
+1. deposit(amount)
+2. validateDepositAmount

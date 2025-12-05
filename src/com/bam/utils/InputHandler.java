@@ -5,7 +5,7 @@ import com.bam.services.AccountManager;
 
 import java.util.Scanner;
 
-// performs input handling and validation
+// performs input handling
 public class InputHandler {
     private final Scanner scanner = new Scanner(System.in);
     private final InputValidator validator = new InputValidator();
@@ -43,7 +43,7 @@ public class InputHandler {
     public int getAge(String prompt) {
         int age;
         while (true) {
-            age = getIntInput(prompt, "Invalid input. Please enter a valid number.");
+            age = getIntInput(prompt, "Age must be a number");
             try {
                 validator.validateAge(age);
                 break; // Valid input, exit loop
@@ -77,7 +77,7 @@ public class InputHandler {
                  account = acm.findAccount(accountNumber);
                  return account;
             } catch (InvalidAccountException e) {
-                System.out.println("Account not found. Please check the account number and try again.");
+                System.out.println(e.getMessage());
             }
         }
     }
@@ -139,6 +139,51 @@ public class InputHandler {
             }
         }
         return choice;
+    }
+
+    public int getTransactionTypeChoice(String prompt) {
+        int choice;
+        while (true) {
+            choice = getIntInput(prompt, "Choice must be a number");
+            try{
+                validator.validateTransactionTypeChoice(choice);
+                break; // Valid input, exit loop
+            }
+            catch(InvalidChoiceException e){
+                System.out.println(e.getMessage());
+            }
+        }
+        return choice;
+    }
+
+    public double getDepositAmount(String prompt) {
+        double amount;
+        while (true) {
+            amount = getDoubleInput(prompt, "Amount must be a number");
+            try{
+                validator.validateDepositAmount(amount);
+                break; // Valid input, exit loop
+            }
+            catch(InvalidDepositAmountException e){
+                System.out.println(e.getMessage());
+            }
+        }
+        return amount;
+    }
+
+    public double getWithdrawalAmount(String prompt) {
+        double amount;
+        while (true) {
+            amount = getDoubleInput(prompt, "Amount must be a number");
+            try{
+                validator.validateWithdrawalAmount(amount);
+                break; // Valid input, exit loop
+            }
+            catch(InvalidWithdrawalAmountException e){
+                System.out.println(e.getMessage());
+            }
+        }
+        return amount;
     }
 
     public void closeScanner() {
