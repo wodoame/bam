@@ -64,17 +64,10 @@ public abstract class Account implements Transactable {
     @Override
     public boolean processTransaction(double amount, String type) {
         if (type.equalsIgnoreCase("deposit")) {
-            try {
                return deposit(amount);
-            }catch(InvalidDepositAmountException e){
-                System.out.println(e.getMessage());
-            }
-        } else if (type.equalsIgnoreCase("withdrawal")) {
-            try{
+        }
+        if (type.equalsIgnoreCase("withdrawal")) {
                 return withdraw(amount);
-            }catch(InvalidWithdrawalAmountException | InsufficientFundsException e){
-                System.out.println(e.getMessage());
-            }
         }
         return false;
     }

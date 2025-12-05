@@ -6,10 +6,11 @@ import com.bam.exceptions.InsufficientFundsException;
 public class CheckingAccount extends Account {
     private final double overdraftLimit;
     private final double monthlyFee;
+    public static final double OVERDRAFT_LIMIT = 1000.0;
 
     public CheckingAccount(Customer customer, double initialDeposit) {
         super(customer, initialDeposit);
-        this.overdraftLimit = 1000.0;
+        this.overdraftLimit = OVERDRAFT_LIMIT;
         this.monthlyFee = 10.0;
     }
 

@@ -171,15 +171,15 @@ public class InputHandler {
         return amount;
     }
 
-    public double getWithdrawalAmount(String prompt) {
+    public double getWithdrawalAmount(String prompt, Account account) {
         double amount;
         while (true) {
             amount = getDoubleInput(prompt, "Amount must be a number");
             try{
-                validator.validateWithdrawalAmount(amount);
+                validator.validateWithdrawalAmount(amount, account);
                 break; // Valid input, exit loop
             }
-            catch(InvalidWithdrawalAmountException e){
+            catch(InsufficientFundsException | InvalidWithdrawalAmountException e){
                 System.out.println(e.getMessage());
             }
         }

@@ -14,7 +14,7 @@ public class Main {
     private static final TransactionManager transactionManager = new TransactionManager();
 
     public static void main(String[] args) {
-        accountManager.generateSeedAccounts();
+        accountManager.generateSeedAccounts(transactionManager);
         boolean exit = false;
         while (!exit) {
             printMenu();
@@ -76,7 +76,7 @@ public class Main {
         int accountTypeChoice = inputHandler.getAccountTypeChoice("Enter choice: ");
         double initialDeposit;
 
-        Account account = null;
+        Account account;
         if (accountTypeChoice == 1) {
             initialDeposit = inputHandler.getInitialDeposit("Enter Initial Deposit: ", "savings");
             account = new SavingsAccount(customer, initialDeposit);
@@ -105,6 +105,10 @@ public class Main {
     private static void processTransaction() {
         System.out.println("\n--- Process Transaction ---");
         Account account = inputHandler.getAccount("Enter Account Number: ", accountManager);
+        System.out.println("\nACCOUNT DETAILS");
+        System.out.println("______________________");
+        account.displayAccountDetails();
+        System.out.println();
         System.out.println("Select Transaction Type:");
         System.out.println("1. Deposit");
         System.out.println("2. Withdrawal");
@@ -119,7 +123,7 @@ public class Main {
             txn = new Transaction(account.getAccountNumber(), type, amount, account.getBalance() + amount);
 
         } else {
-            amount = inputHandler.getWithdrawalAmount("Enter Amount: ");
+            amount = inputHandler.getWithdrawalAmount("Enter Amount: ", account);
             type = "Withdrawal";
             txn = new Transaction(account.getAccountNumber(), type, amount, account.getBalance() - amount);
         }

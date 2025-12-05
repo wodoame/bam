@@ -4,6 +4,7 @@ import com.bam.exceptions.InvalidAccountException;
 import com.bam.models.Account;
 import com.bam.models.RegularCustomer;
 import com.bam.models.SavingsAccount;
+import com.bam.models.Transaction;
 
 import java.util.Scanner;
 
@@ -78,12 +79,15 @@ public class AccountManager {
         return total;
     }
 
-    public void generateSeedAccounts() {
+    public void generateSeedAccounts(TransactionManager transactionManager) {
         String[] names = {"Bernard", "Alice", "John", "Diana", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack"};
         for (String name: names){
+            double initialDeposit = 500;
             RegularCustomer customer = new RegularCustomer(name, 30, "0123456789", "Accra, Ghana");
-            SavingsAccount account = new SavingsAccount(customer, 100.0);
+            SavingsAccount account = new SavingsAccount(customer, initialDeposit);
             addAccount(account, true);
+            Transaction txn = new Transaction(account.getAccountNumber(), "Deposit", initialDeposit, account.getBalance());
+            transactionManager.addTransaction(txn);
         }
     }
 
