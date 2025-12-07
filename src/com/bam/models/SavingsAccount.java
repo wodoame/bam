@@ -2,6 +2,9 @@ package com.bam.models;
 
 import com.bam.exceptions.InvalidWithdrawalAmountException;
 import com.bam.exceptions.InsufficientFundsException;
+import com.bam.utils.InputValidator;
+
+import javax.xml.validation.Validator;
 
 public class SavingsAccount extends Account {
     private final double interestRate;
@@ -28,20 +31,6 @@ public class SavingsAccount extends Account {
     @Override
     public String getAccountType() {
         return "Savings";
-    }
-
-    @Override
-    public boolean withdraw(double amount) {
-        if (amount <= 0) {
-            throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");
-        }
-        if ((balance - amount) < minimumBalance) {
-            // Use a different exception here
-            throw new InsufficientFundsException("Withdrawal failed. Insufficient funds or minimum balance constraint. You must have at least $" + minimumBalance + " remaining after withdrawal.");
-        }
-        balance -= amount;
-        System.out.println("Withdrawal successful. New Balance: $" + balance);
-        return true;
     }
 
     public void calculateInterest() {

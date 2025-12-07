@@ -49,6 +49,7 @@ Exceptions:
 - `InsufficientInitialDepositException`: Custom exception for invalid age input
 - `InvalidContactException`: Custom exception for invalid age input
 - `InvalidNameException`: Custom exception for invalid age input
+- `OverdraftExceededException` 
 - Add exceptions for invalid choices in the menu
 
 
@@ -63,3 +64,22 @@ Random:
 Show confirmation messages only when amount is valid
 1. deposit(amount)
 2. validateDepositAmount
+
+Random:
+1. The transaction id should start from 001 for each account. A single global counter should not be used.
+2. Fix the wrong transaction details for withdrawals in checking accounts.
+
+```TRANSACTION CONFIRMATION
+________________________________
+Transaction ID: TXN014
+Account Number: ACC012
+Type: Withdrawal
+Amount: $600.00
+Previous Balance: $500.00
+New Balance: $-100.00
+Timestamp: Sun Dec 07 19:52:04 GMT 2025
+Confirm transaction? (Y/N):  
+```
+3. Fix the balance value for checking account in `viewTransactionsByAccount` method of `TransactionManager` class. This includes the initial transaction.
+4. Add an `InputMismatchException` for handling wrong inputs
+5. Test scenario 4, 6, 7

@@ -125,7 +125,15 @@ public class Main {
         } else {
             amount = inputHandler.getWithdrawalAmount("Enter Amount: ", account);
             type = "Withdrawal";
-            txn = new Transaction(account.getAccountNumber(), type, amount, account.getBalance() - amount);
+            String accountType = account.getAccountType();
+            if(accountType.equalsIgnoreCase("savings")){
+                txn = new Transaction(account.getAccountNumber(), type, amount, account.getBalance() - amount);
+            }
+            else{
+                // checking account with overdraft
+                double balanceAfter = account.getBalance() + CheckingAccount.OVERDRAFT_LIMIT - amount;
+                txn = new Transaction(account.getAccountNumber(), type, amount, balanceAfter);
+            }
         }
         boolean isConfirmed = showTransactionConfirmationPrompt(txn);
         if (!isConfirmed) {
@@ -142,12 +150,7 @@ public class Main {
     }
 
     private static void viewTransactionHistory() {
-        String accountNumber = inputHandler.getStringInput("Enter Account Number: ");
-        try {
-            accountManager.findAccount(accountNumber);
-            transactionManager.viewTransactionsByAccount(accountNumber);
-        } catch (InvalidAccountException e) {
-            System.out.println(e.getMessage());
-        }
+        Account account = inputHandler.getAccount("Enter Account Number: ", accountManager);
+        transactionManager.viewTransactionsByAccount(account.getAccountNumber());
     }
 }

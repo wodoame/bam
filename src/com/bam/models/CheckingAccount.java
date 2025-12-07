@@ -1,7 +1,5 @@
 package com.bam.models;
 
-import com.bam.exceptions.InvalidWithdrawalAmountException;
-import com.bam.exceptions.InsufficientFundsException;
 
 public class CheckingAccount extends Account {
     private final double overdraftLimit;
@@ -19,7 +17,7 @@ public class CheckingAccount extends Account {
         System.out.println("Account ID: " + accountNumber);
         System.out.println("Customer: " + customer.getName());
         System.out.println("Type: " + getAccountType());
-        System.out.println("Balance: $" + balance);
+        System.out.printf("Balance: $%.2f (overdraft included)\n", (balance + overdraftLimit));
         System.out.println("Overdraft Limit: $" + overdraftLimit);
         System.out.println("Monthly Fee: $" + monthlyFee);
         System.out.println("Status: " + status);
@@ -28,19 +26,6 @@ public class CheckingAccount extends Account {
     @Override
     public String getAccountType() {
         return "Checking";
-    }
-
-    @Override
-    public boolean withdraw(double amount) {
-        if (amount <= 0) {
-            throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");
-        }
-        if ((balance - amount) < -overdraftLimit) {
-            throw new InsufficientFundsException("Withdrawal failed. Exceeds overdraft limit of $" + overdraftLimit);
-        }
-        balance -= amount;
-        System.out.println("Withdrawal successful. New Balance: $" + balance);
-        return true;
     }
 
     public void applyMonthlyFee() {

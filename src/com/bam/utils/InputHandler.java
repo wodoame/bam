@@ -179,7 +179,7 @@ public class InputHandler {
                 validator.validateWithdrawalAmount(amount, account);
                 break; // Valid input, exit loop
             }
-            catch(InsufficientFundsException | InvalidWithdrawalAmountException e){
+            catch(InsufficientFundsException | InvalidWithdrawalAmountException | OverdraftExceededException e){
                 System.out.println(e.getMessage());
             }
         }

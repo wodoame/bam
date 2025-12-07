@@ -3,7 +3,9 @@ package com.bam.models;
 import com.bam.exceptions.InvalidDepositAmountException;
 import com.bam.exceptions.InvalidWithdrawalAmountException;
 import com.bam.exceptions.InsufficientFundsException;
+import com.bam.exceptions.OverdraftExceededException;
 import com.bam.interfaces.Transactable;
+import com.bam.utils.InputValidator;
 
 public abstract class Account implements Transactable {
     protected String accountNumber;
@@ -27,23 +29,25 @@ public abstract class Account implements Transactable {
     public abstract String getAccountType();
 
     public boolean deposit(double amount) {
-        if (amount <= 0) {
-            throw new InvalidDepositAmountException("Deposit amount must be greater than zero.");
-        }
+        InputValidator validator = new InputValidator();
+        validator.validateDepositAmount(amount);
         balance += amount;
         return true;
     }
 
-    public boolean withdraw(double amount) {
-        if (amount <= 0) {
-            throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");
+    public boolean withdraw(double amount){
+        InputValidator validator = new InputValidator();
+        try{
+            validator.validateWithdrawalAmount(amount, this);
+            balance -= amount;
+            System.out.println("Withdrawal successful");
+            return true;
         }
-        if (balance < amount) {
-            throw new InsufficientFundsException("Insufficient funds. Current balance: $" + balance);
+        catch(InsufficientFundsException | InvalidWithdrawalAmountException | OverdraftExceededException e){
+            System.out.println(e.getMessage());
+            return false;
         }
-        balance -= amount;
-        return true;
-    }
+    };
 
     public String getAccountNumber() {
         return accountNumber;

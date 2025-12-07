@@ -63,20 +63,21 @@ public class InputValidator {
         if (amount <= 0) {
             throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");
         }
-        double currentBalance = account.getBalance();
 
         if (account.getAccountType().equalsIgnoreCase("savings")) {
-            if (currentBalance - amount < SavingsAccount.MINIMUM_BALANCE) {
+            if (account.getBalance() - amount < SavingsAccount.MINIMUM_BALANCE) {
                 throw new InsufficientFundsException(String.format(
                         "You do not have sufficient funds (%.2f) to perform this transaction\n" +
                         "You need a minimum balance of $%.2f in your account",
-                        currentBalance, SavingsAccount.MINIMUM_BALANCE));
+                        account.getBalance(), SavingsAccount.MINIMUM_BALANCE));
             }
         }
 
         if (account.getAccountType().equalsIgnoreCase("checking")) {
-            if (currentBalance - amount < -CheckingAccount.OVERDRAFT_LIMIT) {
-                throw new InsufficientFundsException(String.format("You do not have sufficient funds ($%.2f + $%.2f overdraft limit) to perform this transaction", currentBalance, CheckingAccount.OVERDRAFT_LIMIT));
+            if (account.getBalance() - amount < -CheckingAccount.OVERDRAFT_LIMIT) {
+                throw new OverdraftExceededException(String.format("Overdraft limit exceeded\n" +
+                        "You do not have sufficient funds ($%.2f + $%.2f overdraft limit) to perform this transaction",
+                        account.getBalance(), CheckingAccount.OVERDRAFT_LIMIT));
             }
         }
     }
