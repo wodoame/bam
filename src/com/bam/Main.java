@@ -1,12 +1,21 @@
 package com.bam;
 
-import com.bam.exceptions.InvalidAccountException;
 import com.bam.models.*;
 import com.bam.services.AccountManager;
 import com.bam.services.TransactionManager;
 import com.bam.utils.InputHandler;
+import org.junit.platform.launcher.Launcher;
+import org.junit.platform.launcher.LauncherDiscoveryRequest;
+import org.junit.platform.launcher.TestExecutionListener;
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
+import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+import org.junit.platform.launcher.listeners.TestExecutionSummary;
+import org.junit.platform.engine.TestExecutionResult;
 
 import java.util.Scanner;
+
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 
 public class Main {
     private static final InputHandler inputHandler = new InputHandler();
@@ -17,7 +26,40 @@ public class Main {
         accountManager.generateSeedAccounts(transactionManager);
         boolean exit = false;
         while (!exit) {
-            printMenu();
+            printMainMenu();
+            int choice = inputHandler.getIntInput("Enter your choice: ", "Choice must be a number");
+            switch (choice) {
+                case 1:
+                    manageAccountsMenu();
+                    break;
+                case 2:
+                    processTransaction();
+                    break;
+                case 3:
+                    generateAccountStatements();
+                    break;
+                case 4:
+                    runTests();
+                    break;
+                case 5:
+                    exit = true;
+                    System.out.println("\nThank you for using the Bank Account Management System!\nAll data saved in memory. Remember to commit your latest changest to Git!\nGoodbye!");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+        inputHandler.closeScanner();
+    }
+
+    private static void manageAccountsMenu() {
+        boolean backToMain = false;
+        while (!backToMain) {
+            System.out.println("\n=== Manage Accounts ===");
+            System.out.println("1. Create Account");
+            System.out.println("2. View All Accounts");
+            System.out.println("3. View Transaction History");
+            System.out.println("4. Back to Main Menu");
             int choice = inputHandler.getIntInput("Enter your choice: ", "Choice must be a number");
             switch (choice) {
                 case 1:
@@ -27,28 +69,23 @@ public class Main {
                     accountManager.viewAllAccounts();
                     break;
                 case 3:
-                    processTransaction();
-                    break;
-                case 4:
                     viewTransactionHistory();
                     break;
-                case 5:
-                    exit = true;
-                    System.out.println("Exiting system. Goodbye!");
+                case 4:
+                    backToMain = true;
                     break;
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
         }
-        inputHandler.closeScanner();
     }
 
-    private static void printMenu() {
+    private static void printMainMenu() {
         System.out.println("\n=== Bank Account Management System ===");
-        System.out.println("1. Create Account");
-        System.out.println("2. View All Accounts");
-        System.out.println("3. Process Transaction");
-        System.out.println("4. View Transaction History");
+        System.out.println("1. Manage Accounts");
+        System.out.println("2. Perform Transactions");
+        System.out.println("3. Generate Account Statements");
+        System.out.println("4. Run tests");
         System.out.println("5. Exit");
     }
 
@@ -152,5 +189,109 @@ public class Main {
     private static void viewTransactionHistory() {
         Account account = inputHandler.getAccount("Enter Account Number: ", accountManager);
         transactionManager.viewTransactionsByAccount(account.getAccountNumber());
+    }
+
+    private static void generateAccountStatements() {
+        System.out.println("\nGENERATE ACCOUNT STATEMENTS");
+        System.out.println("_________________________________");
+        Account account = inputHandler.getAccount("Enter Account Number: ", accountManager);
+        transactionManager.generateStatement(account);
+    }
+
+    private static void runTests() {
+        System.out.println("\n=== Running Tests ===");
+        System.out.println("Discovering and executing tests...\n");
+
+        // Create listeners to capture test results
+        SummaryGeneratingListener summaryListener = new SummaryGeneratingListener();
+        TestReportingListener reportingListener = new TestReportingListener();
+
+        // Build the discovery request for test classes
+        LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
+                .selectors(
+                        selectClass("test.java.models.AccountDepositTest"),
+                        selectClass("test.java.models.CheckingAccountWithdrawTest"),
+                        selectClass("test.java.models.SavingsAccountWithdrawTest")
+                )
+                .build();
+
+        // Create and execute the launcher
+        Launcher launcher = LauncherFactory.create();
+        launcher.registerTestExecutionListeners(summaryListener, reportingListener);
+        launcher.execute(request);
+
+        // Get the test execution summary
+        TestExecutionSummary summary = summaryListener.getSummary();
+
+        // Display results with custom formatting
+        System.out.println("=== Test Execution Results ===\n");
+
+        // Display all test results in the requested format
+        reportingListener.displayResults();
+
+        System.out.println("\n--- Summary ---");
+        System.out.println("Tests Found:      " + summary.getTestsFoundCount());
+        System.out.println("Tests Started:    " + summary.getTestsStartedCount());
+        System.out.println("Tests Succeeded:  " + summary.getTestsSucceededCount());
+        System.out.println("Tests Failed:     " + summary.getTestsFailedCount());
+        System.out.println("Tests Skipped:    " + summary.getTestsSkippedCount());
+        System.out.println("Tests Aborted:    " + summary.getTestsAbortedCount());
+
+        // Display failure details if any
+        if (!summary.getFailures().isEmpty()) {
+            System.out.println("\n--- Failure Details ---");
+            summary.getFailures().forEach(failure -> {
+                System.out.println("\n✗ " + failure.getTestIdentifier().getDisplayName());
+                System.out.println("  " + failure.getException().getMessage());
+            });
+        }
+
+        // Overall status
+        System.out.println();
+        if (summary.getTestsFailedCount() == 0 && summary.getTestsAbortedCount() == 0 && summary.getTestsFoundCount() > 0) {
+            System.out.println("✓ All tests passed!");
+        } else if (summary.getTestsFailedCount() > 0 || summary.getTestsAbortedCount() > 0) {
+            System.out.println("✗ Some tests failed.");
+        } else {
+            System.out.println("No tests were executed.");
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        new Scanner(System.in).nextLine();
+    }
+
+    // Custom TestExecutionListener to capture and report all test results
+    private static class TestReportingListener implements TestExecutionListener {
+        private final java.util.List<TestResult> results = new java.util.ArrayList<>();
+
+        public void executionFinished(org.junit.platform.engine.TestDescriptor testDescriptor,
+                                     TestExecutionResult result) {
+            // Capture test methods only (not test containers/classes)
+            if (testDescriptor.isTest()) {
+                String testName = testDescriptor.getDisplayName();
+                String status = result.getStatus().toString();
+                results.add(new TestResult(testName, status));
+            }
+        }
+
+        void displayResults() {
+            if (results.isEmpty()) {
+                return;
+            }
+            for (TestResult result : results) {
+                String status = result.status.equals("SUCCESSFUL") ? "PASSED" : "FAILED";
+                System.out.printf("Test: %s ........%s%n", result.testName, status);
+            }
+        }
+
+        private static class TestResult {
+            String testName;
+            String status;
+
+            TestResult(String testName, String status) {
+                this.testName = testName;
+                this.status = status;
+            }
+        }
     }
 }

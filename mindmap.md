@@ -83,3 +83,5 @@ Confirm transaction? (Y/N):
 3. Fix the balance value for checking account in `viewTransactionsByAccount` method of `TransactionManager` class. This includes the initial transaction.
 4. Add an `InputMismatchException` for handling wrong inputs
 5. Test scenario 4, 6, 7
+6. `transfer` method is needed
+7. Create a balance formatter to handle savings and checking account balance display
