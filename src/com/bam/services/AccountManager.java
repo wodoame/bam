@@ -1,0 +1,154 @@
+package com.bam.services;
+
+import com.bam.exceptions.InvalidAccountException;
+import com.bam.models.Account;
+import com.bam.models.CheckingAccount;
+import com.bam.models.RegularCustomer;
+import com.bam.models.SavingsAccount;
+import com.bam.models.Transaction;
+import com.bam.utils.InputHandler;
+import java.util.Random;
+
+public class AccountManager {
+    private final Account[] accounts;
+    private int accountCount;
+    private final InputHandler inputHandler;
+
+    public AccountManager(InputHandler inputHandler) {
+        this.accounts = new Account[50];
+        this.accountCount = 0;
+        this.inputHandler = inputHandler;
+    }
+
+    // By default, this method should show success message and the customer details
+    public void addAccount(Account account) {
+        addAccount(account, false);
+    }
+
+    public void addAccount(Account account, boolean silent) {
+        if (accountCount < accounts.length) {
+            accounts[accountCount++] = account;
+            if (!silent) {
+                System.out.println("\nAccount created successfully!");
+                account.displayAccountDetails();
+                System.out.println("\nPress Enter to continue...");
+                inputHandler.waitForEnter();
+            }
+        } else {
+            System.out.println("Account limit reached. Cannot create new account.");
+        }
+    }
+
+    public Account findAccount(String accountNumber) {
+        for (int i = 0; i < accountCount; i++) {
+            if (accounts[i].getAccountNumber().equals(accountNumber)) {
+                return accounts[i];
+            }
+        }
+        throw new InvalidAccountException("Account number " + accountNumber + " not found.");
+    }
+
+    public void viewAllAccounts() {
+        System.out.println("ACCOUNT LISTING");
+        final String headerFormat = "%-10s | %-20s | %-30s | %-12s | %-10s%n";
+        final String rowFormat = "%-10s | %-20s | %-30s | %-12s | %-10s%n";
+        final int tableWidth = 10 + 3 + 20 + 3 + 30 + 3 + 12 + 3 + 10; // column widths plus separator spacing
+        final String divider = "-".repeat(tableWidth);
+        System.out.println(divider);
+        System.out.printf(headerFormat, "ACC NO", "CUSTOMER NAME", "TYPE", "BALANCE", "STATUS");
+        System.out.println(divider);
+        for (int i = 0; i < accountCount; i++) {
+            Account account = accounts[i];
+
+            // For checking accounts, show balance + overdraft limit
+            String balanceValue;
+            if (account instanceof CheckingAccount checkingAcc) {
+                double totalAvailable = account.getBalance() + checkingAcc.getOverdraftLimit();
+                balanceValue = String.format("$%.2f", totalAvailable);
+            } else {
+                balanceValue = String.format("$%.2f", account.getBalance());
+            }
+
+            // Print main account row
+            System.out.printf(
+                    rowFormat,
+                    account.getAccountNumber(),
+                    account.getCustomer().getName(),
+                    account.getAccountType(),
+                    balanceValue,
+                    account.getStatus()
+            );
+
+            // Print account-specific details on the next line
+            if (account instanceof SavingsAccount savingsAcc) {
+                System.out.printf("%-10s | %-20s | %-30s |%n",
+                    "",
+                    "",
+                    String.format("Interest Rate: %.1f%%", savingsAcc.getInterestRate()));
+                System.out.printf("%-10s | %-20s | %-30s |%n",
+                    "",
+                    "",
+                    String.format("Min Balance: $%.0f", savingsAcc.getMinimumBalance()));
+            } else if (account instanceof CheckingAccount checkingAcc) {
+                System.out.printf("%-10s | %-20s | %-30s |%n",
+                    "",
+                    "",
+                    String.format("Overdraft Limit: $%.0f", checkingAcc.getOverdraftLimit()));
+                System.out.printf("%-10s | %-20s | %-30s |%n",
+                    "",
+                    "",
+                    String.format("Monthly Fee: $%.0f", checkingAcc.getMonthlyFee()));
+            }
+
+            // Add row separator after each account
+            System.out.println(divider);
+        }
+        System.out.println("Total Accounts: " + accountCount);
+        System.out.printf("Total Bank Balance: $%.2f%n", getTotalBalance());
+        System.out.println("\nPress Enter to continue...");
+        inputHandler.waitForEnter();
+    }
+
+    public double getTotalBalance() {
+        double total = 0;
+        for (int i = 0; i < accountCount; i++) {
+            total += accounts[i].getBalance();
+        }
+        return total;
+    }
+
+    public void generateSeedAccounts(TransactionManager transactionManager) {
+        String[] names = {"Bernard", "Alice", "John", "Diana", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack"};
+        Random random = new Random();
+
+        for (String name: names){
+            double initialDeposit = 500 + (random.nextDouble() * 1500); // Random deposit between 500 and 2000
+            RegularCustomer customer = new RegularCustomer(name, 30, "0123456789", "Accra, Ghana");
+
+            // Randomly choose between Savings (0) and Checking (1) account
+            Account account;
+            if (random.nextBoolean()) {
+                account = new SavingsAccount(customer, initialDeposit);
+            } else {
+                account = new CheckingAccount(customer, initialDeposit);
+            }
+
+            addAccount(account, true);
+
+            // For checking accounts, the balance after should include overdraft limit
+            double balanceAfter;
+            if (account instanceof CheckingAccount checkingAcc) {
+                balanceAfter = account.getBalance() + checkingAcc.getOverdraftLimit();
+            } else {
+                balanceAfter = account.getBalance();
+            }
+
+            Transaction txn = new Transaction(account.getAccountNumber(), "Deposit", initialDeposit, balanceAfter);
+            transactionManager.addTransaction(txn);
+        }
+    }
+
+    public int getAccountCount() {
+        return accountCount;
+    }
+}

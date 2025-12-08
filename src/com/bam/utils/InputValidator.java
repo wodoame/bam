@@ -1,0 +1,84 @@
+package com.bam.utils;
+
+import com.bam.exceptions.*;
+import com.bam.models.Account;
+import com.bam.models.CheckingAccount;
+import com.bam.models.SavingsAccount;
+
+public class InputValidator {
+    public void validateAge(int age) {
+        if (age < 18) {
+            throw new InvalidAgeException("You must be at least 18 years old to create an account.");
+        }
+    }
+
+    public void validateName(String name) {
+        if (name.trim().isEmpty()) {
+            throw new InvalidNameException("Name cannot be empty.");
+        }
+        if (!name.matches("[a-zA-Z ]+")) {
+            throw new InvalidNameException("Name can only contain letters and spaces.");
+        }
+    }
+
+    public void validateContact(String contact) {
+        if (!contact.matches("\\d{10}")) {
+            throw new InvalidContactException("Contact number must be exactly 10 digits.");
+        }
+    }
+
+    public void validateInitialDepositAmount(double amount, String accountType) {
+        if (accountType.equalsIgnoreCase("savings")) {
+            if (amount < SavingsAccount.MINIMUM_BALANCE) {
+                throw new InsufficientInitialDepositException("Initial deposit for savings account must be at least " + SavingsAccount.MINIMUM_BALANCE);
+            }
+        }
+    }
+
+    public void validateAccountTypeChoice(int choice) {
+        if (choice != 1 && choice != 2) {
+            throw new InvalidChoiceException("Please select a valid option (1 or 2)");
+        }
+    }
+
+    public void validateCustomerTypeChoice(int choice) {
+        if (choice != 1 && choice != 2) {
+            throw new InvalidChoiceException("Please select a valid option (1 or 2)");
+        }
+    }
+
+    public void validateTransactionTypeChoice(int choice) {
+        if (choice != 1 && choice != 2) {
+            throw new InvalidChoiceException("Please select a valid option (1 or 2)");
+        }
+    }
+
+    public void validateDepositAmount(double amount) {
+        if (amount <= 0) {
+            throw new InvalidDepositAmountException("Deposit amount must be greater than zero.");
+        }
+    }
+
+    public void validateWithdrawalAmount(double amount, Account account) {
+        if (amount <= 0) {
+            throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");
+        }
+
+        if (account.getAccountType().equalsIgnoreCase("savings")) {
+            if (account.getBalance() - amount < SavingsAccount.MINIMUM_BALANCE) {
+                throw new InsufficientFundsException(String.format(
+                        "You do not have sufficient funds (%.2f) to perform this transaction\n" +
+                        "You need a minimum balance of $%.2f in your account",
+                        account.getBalance(), SavingsAccount.MINIMUM_BALANCE));
+            }
+        }
+
+        if (account.getAccountType().equalsIgnoreCase("checking")) {
+            if (account.getBalance() - amount < -CheckingAccount.OVERDRAFT_LIMIT) {
+                throw new OverdraftExceededException(String.format("Overdraft limit exceeded\n" +
+                        "You do not have sufficient funds ($%.2f + $%.2f overdraft limit) to perform this transaction",
+                        account.getBalance(), CheckingAccount.OVERDRAFT_LIMIT));
+            }
+        }
+    }
+}
