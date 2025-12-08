@@ -19,7 +19,7 @@ import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass
 
 public class Main {
     private static final InputHandler inputHandler = new InputHandler();
-    private static final AccountManager accountManager = new AccountManager();
+    private static final AccountManager accountManager = new AccountManager(inputHandler);
     private static final TransactionManager transactionManager = new TransactionManager();
 
     public static void main(String[] args) {
@@ -92,8 +92,8 @@ public class Main {
     private static void createAccount() {
         System.out.println("\n--- Create New Account ---");
         System.out.println("Select Customer Type:");
-        System.out.println("1. Regular");
-        System.out.println("2. Premium");
+        System.out.println("1. Regular (Standard banking services)");
+        System.out.println("2. Premium (Enhanced benefits, min balance $10,000)");
         int customerTypeChoice = inputHandler.getCustomerTypeChoice("Enter choice: ");
         String name = inputHandler.getName("Enter Customer Name: ");
         int age = inputHandler.getAge("Enter Age: ");
@@ -108,8 +108,8 @@ public class Main {
         }
 
         System.out.println("Select Account Type:");
-        System.out.println("1. Savings (Interest Rate: 3.5, Minimum Balance: $500)");
-        System.out.println("2. Checking (Overdraft: $1000, Monthly Fee: $10)");
+        System.out.printf("1. Savings (Interest Rate: %.1f, Minimum Balance: $%.2f)\n", SavingsAccount.INTEREST_RATE, SavingsAccount.MINIMUM_BALANCE);
+        System.out.printf("2. Checking (Overdraft: $%.2f, Monthly Fee: $%.2f)\n", CheckingAccount.OVERDRAFT_LIMIT, CheckingAccount.MONTHLY_FEE );
         int accountTypeChoice = inputHandler.getAccountTypeChoice("Enter choice: ");
         double initialDeposit;
 
@@ -188,6 +188,9 @@ public class Main {
 
     private static void viewTransactionHistory() {
         Account account = inputHandler.getAccount("Enter Account Number: ", accountManager);
+        System.out.println();
+        account.displayAccountDetails();
+        System.out.println();
         transactionManager.viewTransactionsByAccount(account.getAccountNumber());
     }
 

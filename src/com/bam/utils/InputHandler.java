@@ -186,6 +186,10 @@ public class InputHandler {
         return amount;
     }
 
+    public void waitForEnter() {
+        scanner.nextLine();
+    }
+
     public void closeScanner() {
         scanner.close();
     }

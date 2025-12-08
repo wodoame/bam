@@ -5,17 +5,18 @@ public class CheckingAccount extends Account {
     private final double overdraftLimit;
     private final double monthlyFee;
     public static final double OVERDRAFT_LIMIT = 1000.0;
+    public static final double MONTHLY_FEE = 10.0;
 
     public CheckingAccount(Customer customer, double initialDeposit) {
         super(customer, initialDeposit);
         this.overdraftLimit = OVERDRAFT_LIMIT;
-        this.monthlyFee = 10.0;
+        this.monthlyFee = customer.getCustomerType().equalsIgnoreCase("premium")? 0: MONTHLY_FEE;
     }
 
     @Override
     public void displayAccountDetails() {
         System.out.println("Account ID: " + accountNumber);
-        System.out.println("Customer: " + customer.getName());
+        System.out.printf("Customer: %s (%s)\n", customer.getName(), customer.getCustomerType());
         System.out.println("Type: " + getAccountType());
         System.out.printf("Balance: $%.2f (overdraft included)\n", (balance + overdraftLimit));
         System.out.println("Overdraft Limit: $" + overdraftLimit);
@@ -38,5 +39,13 @@ public class CheckingAccount extends Account {
             balance -= monthlyFee;
             System.out.println("Monthly fee applied: $" + monthlyFee);
         }
+    }
+
+    public double getOverdraftLimit() {
+        return overdraftLimit;
+    }
+
+    public double getMonthlyFee() {
+        return monthlyFee;
     }
 }
