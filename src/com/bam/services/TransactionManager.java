@@ -23,24 +23,26 @@ public class TransactionManager {
 
     public void viewTransactionsByAccount(String accountNumber) {
         System.out.println("TRANSACTION HISTORY FOR ACCOUNT NUMBER " + accountNumber);
-        final String headerFormat = "%-10s | %-12s | %-12s | %-25s%n";
-        final String rowFormat = "%-10s | %-12s | %-12s | %-25s%n";
-        final int tableWidth = 10 + 3 + 12 + 3 + 12 + 3 + 25;
+        final String headerFormat = "%-10s | %-12s | %-12s | %-12s | %-25s%n";
+        final String rowFormat = "%-10s | %-12s | %-12s | %-12s | %-25s%n";
+        final int tableWidth = 10 + 3 + 12 + 3 + 12 + 3 + 12 + 3 + 25;
         final String divider = "-".repeat(tableWidth);
         System.out.println(divider);
-        System.out.printf(headerFormat, "TXN ID", "AMOUNT", "BALANCE", "DATE/TIME");
+        System.out.printf(headerFormat, "TXN ID", "TYPE", "AMOUNT", "BALANCE", "DATE/TIME");
         System.out.println(divider);
         boolean found = false;
         // Display in reverse chronological order (newest first)
         for (int i = transactionCount - 1; i >= 0; i--) {
             Transaction txn = transactions[i];
             if (txn.getAccountNumber().equals(accountNumber)) {
+                String type = txn.getType().toUpperCase();
                 String sign = txn.getType().equalsIgnoreCase("deposit") ? "+" : "-";
                 String amountValue = String.format("%s$%.2f", sign, txn.getAmount());
                 String balanceValue = String.format("$%.2f", txn.getBalanceAfter());
                 System.out.printf(
                         rowFormat,
                         txn.getTransactionId(),
+                        type,
                         amountValue,
                         balanceValue,
                         txn.getTimestamp().toString()
@@ -107,12 +109,12 @@ public class TransactionManager {
         System.out.printf("%-25s: %s%n", "Account Status", "Active");
 
         System.out.println("\nTransactions:");
-        final String headerFormat = "%-10s | %-12s | %-12s | %-25s%n";
-        final String rowFormat = "%-10s | %-12s | %-12s | %-25s%n";
-        final int tableWidth = 10 + 3 + 12 + 3 + 12 + 3 + 25;
+        final String headerFormat = "%-10s | %-12s | %-12s | %-12s | %-25s%n";
+        final String rowFormat = "%-10s | %-12s | %-12s | %-12s | %-25s%n";
+        final int tableWidth = 10 + 3 + 12 + 3 + 12 + 3 + 12 + 3 + 25;
         final String divider = "-".repeat(tableWidth);
         System.out.println(divider);
-        System.out.printf(headerFormat, "TXN ID", "AMOUNT", "BALANCE", "DATE/TIME");
+        System.out.printf(headerFormat, "TXN ID", "TYPE", "AMOUNT", "BALANCE", "DATE/TIME");
         System.out.println(divider);
 
         boolean found = false;
@@ -120,12 +122,14 @@ public class TransactionManager {
         for (int i = transactionCount - 1; i >= 0; i--) {
             Transaction txn = transactions[i];
             if (txn.getAccountNumber().equals(accountNumber)) {
+                String type = txn.getType().toUpperCase();
                 String sign = txn.getType().equalsIgnoreCase("deposit") ? "+" : "-";
                 String amountValue = String.format("%s$%.2f", sign, txn.getAmount());
                 String balanceValue = String.format("$%.2f", txn.getBalanceAfter());
                 System.out.printf(
                         rowFormat,
                         txn.getTransactionId(),
+                        type,
                         amountValue,
                         balanceValue,
                         txn.getTimestamp().toString()
@@ -148,7 +152,7 @@ public class TransactionManager {
 //        System.out.printf("%-25s: +$%.2f%n", "Total Deposits", totalDeposits);
 //        System.out.printf("%-25s: -$%.2f%n", "Total Withdrawals", totalWithdrawals);
         System.out.printf("%-25s: %s$%.2f%n", "Net Change", netChange >= 0 ? "+" : "", netChange);
-        System.out.println("\nStatement generated successfully.");
+        System.out.println("\n✓ Statement generated successfully.");
         System.out.println("\nPress Enter to continue...");
         new Scanner(System.in).nextLine();
     }

@@ -30,11 +30,14 @@ class AccountDepositTest extends AccountTestBase {
     }
 
     @Test
-    void depositRejectsZeroOrNegativeAmount() {
-        SavingsAccount account = new SavingsAccount(regularCustomer, 1000);
+    void depositThrowsExceptionWithZeroOrNegativeAmount() {
+        SavingsAccount savingsAccount = new SavingsAccount(regularCustomer, 1000);
+        CheckingAccount checkingAccount = new CheckingAccount(regularCustomer, 1000);
 
-        assertThrows(InvalidDepositAmountException.class, () -> account.deposit(0));
-        assertThrows(InvalidDepositAmountException.class, () -> account.deposit(-50));
+        assertThrows(InvalidDepositAmountException.class, () -> savingsAccount.deposit(0));
+        assertThrows(InvalidDepositAmountException.class, () -> savingsAccount.deposit(-50));
+        assertThrows(InvalidDepositAmountException.class, () -> checkingAccount.deposit(0));
+        assertThrows(InvalidDepositAmountException.class, () -> checkingAccount.deposit(-50));
     }
 }
 

@@ -37,16 +37,9 @@ public abstract class Account implements Transactable {
 
     public boolean withdraw(double amount){
         InputValidator validator = new InputValidator();
-        try{
-            validator.validateWithdrawalAmount(amount, this);
-            balance -= amount;
-            System.out.println("Withdrawal successful");
-            return true;
-        }
-        catch(InsufficientFundsException | InvalidWithdrawalAmountException | OverdraftExceededException e){
-            System.out.println(e.getMessage());
-            return false;
-        }
+        validator.validateWithdrawalAmount(amount, this);
+        balance -= amount;
+        return true;
     };
 
     public String getAccountNumber() {
@@ -71,7 +64,13 @@ public abstract class Account implements Transactable {
                return deposit(amount);
         }
         if (type.equalsIgnoreCase("withdrawal")) {
-                return withdraw(amount);
+            try{
+                boolean res = withdraw(amount);
+                System.out.println("Withdrawal successful.");
+                return res;
+            }catch(InsufficientFundsException | InvalidWithdrawalAmountException | OverdraftExceededException e){
+                System.out.println(e.getMessage());
+            }
         }
         return false;
     }

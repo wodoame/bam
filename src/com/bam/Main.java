@@ -192,15 +192,14 @@ public class Main {
     }
 
     private static void generateAccountStatements() {
-        System.out.println("\nGENERATE ACCOUNT STATEMENTS");
+        System.out.println("\nGENERATE ACCOUNT STATEMENT");
         System.out.println("_________________________________");
         Account account = inputHandler.getAccount("Enter Account Number: ", accountManager);
         transactionManager.generateStatement(account);
     }
 
     private static void runTests() {
-        System.out.println("\n=== Running Tests ===");
-        System.out.println("Discovering and executing tests...\n");
+        System.out.println("\nRunning tests with JUnit ...\n");
 
         // Create listeners to capture test results
         SummaryGeneratingListener summaryListener = new SummaryGeneratingListener();
@@ -223,8 +222,6 @@ public class Main {
         // Get the test execution summary
         TestExecutionSummary summary = summaryListener.getSummary();
 
-        // Display results with custom formatting
-        System.out.println("=== Test Execution Results ===\n");
 
         // Display all test results in the requested format
         reportingListener.displayResults();
@@ -249,7 +246,7 @@ public class Main {
         // Overall status
         System.out.println();
         if (summary.getTestsFailedCount() == 0 && summary.getTestsAbortedCount() == 0 && summary.getTestsFoundCount() > 0) {
-            System.out.println("✓ All tests passed!");
+            System.out.printf("✓ All %d tests passed!", summary.getTestsFoundCount());
         } else if (summary.getTestsFailedCount() > 0 || summary.getTestsAbortedCount() > 0) {
             System.out.println("✗ Some tests failed.");
         } else {
@@ -264,11 +261,12 @@ public class Main {
     private static class TestReportingListener implements TestExecutionListener {
         private final java.util.List<TestResult> results = new java.util.ArrayList<>();
 
-        public void executionFinished(org.junit.platform.engine.TestDescriptor testDescriptor,
+        @Override
+        public void executionFinished(org.junit.platform.launcher.TestIdentifier testIdentifier,
                                      TestExecutionResult result) {
             // Capture test methods only (not test containers/classes)
-            if (testDescriptor.isTest()) {
-                String testName = testDescriptor.getDisplayName();
+            if (testIdentifier.isTest()) {
+                String testName = testIdentifier.getDisplayName();
                 String status = result.getStatus().toString();
                 results.add(new TestResult(testName, status));
             }

@@ -30,7 +30,7 @@ class CheckingAccountWithdrawTest extends AccountTestBase {
     }
 
     @Test
-    void withdrawBeyondOverdraftLimitFails() {
+    void withdrawBeyondOverdraftLimitThrowsException() {
         CheckingAccount account = new CheckingAccount(regularCustomer, 0);
 
         assertThrows(OverdraftExceededException.class, () -> account.withdraw(1100));
@@ -39,7 +39,6 @@ class CheckingAccountWithdrawTest extends AccountTestBase {
     @Test
     void withdrawRejectsNonPositiveAmount() {
         CheckingAccount account = new CheckingAccount(regularCustomer, 500);
-
         assertThrows(InvalidWithdrawalAmountException.class, () -> account.withdraw(0));
         assertThrows(InvalidWithdrawalAmountException.class, () -> account.withdraw(-50));
     }
