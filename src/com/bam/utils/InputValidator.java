@@ -30,7 +30,8 @@ public class InputValidator {
     public void validateInitialDepositAmount(double amount, String accountType) {
         if (accountType.equalsIgnoreCase("savings")) {
             if (amount < SavingsAccount.MINIMUM_BALANCE) {
-                throw new InsufficientInitialDepositException("Initial deposit for savings account must be at least " + SavingsAccount.MINIMUM_BALANCE);
+                throw new InsufficientInitialDepositException(
+                        "Initial deposit for savings account must be at least " + SavingsAccount.MINIMUM_BALANCE);
             }
         }
     }
@@ -48,8 +49,8 @@ public class InputValidator {
     }
 
     public void validateTransactionTypeChoice(int choice) {
-        if (choice != 1 && choice != 2) {
-            throw new InvalidChoiceException("Please select a valid option (1 or 2)");
+        if (choice != 1 && choice != 2 && choice != 3) {
+            throw new InvalidChoiceException("Please select a valid option (1, 2 or 3)");
         }
     }
 
@@ -68,7 +69,7 @@ public class InputValidator {
             if (account.getBalance() - amount < SavingsAccount.MINIMUM_BALANCE) {
                 throw new InsufficientFundsException(String.format(
                         "You do not have sufficient funds (%.2f) to perform this transaction\n" +
-                        "You need a minimum balance of $%.2f in your account",
+                                "You need a minimum balance of $%.2f in your account",
                         account.getBalance(), SavingsAccount.MINIMUM_BALANCE));
             }
         }

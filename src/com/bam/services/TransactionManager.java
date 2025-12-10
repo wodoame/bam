@@ -1,5 +1,7 @@
 package com.bam.services;
 
+import com.bam.models.Account;
+import com.bam.models.CheckingAccount;
 import com.bam.models.Transaction;
 
 import java.util.Scanner;
@@ -11,6 +13,24 @@ public class TransactionManager {
     public TransactionManager() {
         this.transactions = new Transaction[200];
         this.transactionCount = 0;
+    }
+
+    public static double getBalanceAfter(Account account, double amount, String transactionType) {
+        if (transactionType.equalsIgnoreCase("deposit") || transactionType.equalsIgnoreCase("transfer in")) {
+            if (account.getAccountType().equalsIgnoreCase("Checking")) {
+                // For checking accounts, include overdraft limit in balance calculation
+                return account.getBalance() + CheckingAccount.OVERDRAFT_LIMIT + amount;
+            }
+            return account.getBalance() + amount; // For savings accounts
+        } else if (transactionType.equalsIgnoreCase("withdrawal") || transactionType.equalsIgnoreCase("transfer out")) {
+            if (account.getAccountType().equalsIgnoreCase("Checking")) {
+                // For checking accounts, include overdraft limit in balance calculation
+                return account.getBalance() + CheckingAccount.OVERDRAFT_LIMIT - amount;
+            }
+            return account.getBalance() - amount;
+        } else {
+            throw new IllegalArgumentException("Invalid transaction type: " + transactionType);
+        }
     }
 
     public void addTransaction(Transaction transaction) {
@@ -36,7 +56,9 @@ public class TransactionManager {
             Transaction txn = transactions[i];
             if (txn.getAccountNumber().equals(accountNumber)) {
                 String type = txn.getType().toUpperCase();
-                String sign = txn.getType().equalsIgnoreCase("deposit") ? "+" : "-";
+                String sign = txn.getType().equalsIgnoreCase("deposit") || txn.getType().equalsIgnoreCase("transfer in")
+                        ? "+"
+                        : "-";
                 String amountValue = String.format("%s$%.2f", sign, txn.getAmount());
                 String balanceValue = String.format("$%.2f", txn.getBalanceAfter());
                 System.out.printf(
@@ -45,8 +67,7 @@ public class TransactionManager {
                         type,
                         amountValue,
                         balanceValue,
-                        txn.getTimestamp().toString()
-                );
+                        txn.getTimestamp().toString());
                 found = true;
             }
         }
@@ -59,10 +80,14 @@ public class TransactionManager {
         if (found) {
             double totalDeposits = calculateTotalDeposits(accountNumber);
             double totalWithdrawals = calculateTotalWithdrawals(accountNumber);
-            double netChange = totalDeposits - totalWithdrawals;
+            double totalTransfersIn = calculateTotalTransfersIn(accountNumber);
+            double totalTransfersOut = calculateTotalTransfersOut(accountNumber);
+            double netChange = (totalDeposits + totalTransfersIn) - (totalWithdrawals + totalTransfersOut);
             System.out.println("\nSUMMARY:");
             System.out.printf("Total Deposits:     +$%.2f%n", totalDeposits);
             System.out.printf("Total Withdrawals:  -$%.2f%n", totalWithdrawals);
+            System.out.printf("Total Transfers In: +$%.2f%n", totalTransfersIn);
+            System.out.printf("Total Transfers Out: -$%.2f%n", totalTransfersOut);
             System.out.printf("Net Change:         %s$%.2f%n", netChange >= 0 ? "+" : "", netChange);
             System.out.println("\nPress Enter to continue...");
             new Scanner(System.in).nextLine();
@@ -85,6 +110,28 @@ public class TransactionManager {
         for (int i = 0; i < transactionCount; i++) {
             if (transactions[i].getAccountNumber().equals(accountNumber) &&
                     transactions[i].getType().equalsIgnoreCase("withdrawal")) {
+                total += transactions[i].getAmount();
+            }
+        }
+        return total;
+    }
+
+    public double calculateTotalTransfersIn(String accountNumber) {
+        double total = 0;
+        for (int i = 0; i < transactionCount; i++) {
+            if (transactions[i].getAccountNumber().equals(accountNumber) &&
+                    transactions[i].getType().equalsIgnoreCase("Transfer In")) {
+                total += transactions[i].getAmount();
+            }
+        }
+        return total;
+    }
+
+    public double calculateTotalTransfersOut(String accountNumber) {
+        double total = 0;
+        for (int i = 0; i < transactionCount; i++) {
+            if (transactions[i].getAccountNumber().equals(accountNumber) &&
+                    transactions[i].getType().equalsIgnoreCase("Transfer Out")) {
                 total += transactions[i].getAmount();
             }
         }
@@ -132,8 +179,7 @@ public class TransactionManager {
                         type,
                         amountValue,
                         balanceValue,
-                        txn.getTimestamp().toString()
-                );
+                        txn.getTimestamp().toString());
                 found = true;
             }
         }
@@ -144,13 +190,15 @@ public class TransactionManager {
         System.out.println(divider);
 
         // Display summary statistics
-//        System.out.println("\nSTATEMENT SUMMARY:");
-//        System.out.println("-".repeat(70));
+        // System.out.println("\nSTATEMENT SUMMARY:");
+        // System.out.println("-".repeat(70));
         double totalDeposits = calculateTotalDeposits(accountNumber);
         double totalWithdrawals = calculateTotalWithdrawals(accountNumber);
-        double netChange = totalDeposits - totalWithdrawals;
-//        System.out.printf("%-25s: +$%.2f%n", "Total Deposits", totalDeposits);
-//        System.out.printf("%-25s: -$%.2f%n", "Total Withdrawals", totalWithdrawals);
+        double totalTransfersIn = calculateTotalTransfersIn(accountNumber);
+        double totalTransfersOut = calculateTotalTransfersOut(accountNumber);
+        double netChange = (totalDeposits + totalTransfersIn) - (totalWithdrawals + totalTransfersOut);
+        // System.out.printf("%-25s: +$%.2f%n", "Total Deposits", totalDeposits);
+        // System.out.printf("%-25s: -$%.2f%n", "Total Withdrawals", totalWithdrawals);
         System.out.printf("%-25s: %s$%.2f%n", "Net Change", netChange >= 0 ? "+" : "", netChange);
         System.out.println("\n✓ Statement generated successfully.");
         System.out.println("\nPress Enter to continue...");

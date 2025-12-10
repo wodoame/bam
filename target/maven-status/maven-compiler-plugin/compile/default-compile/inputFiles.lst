@@ -7,6 +7,7 @@
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/test/java/models/SavingsAccountWithdrawTest.java
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/com/bam/models/Transaction.java
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/test/java/models/AccountTestBase.java
+/home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/test/java/models/AccountProcessTransactionTest.java
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/com/bam/models/Customer.java
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/com/bam/exceptions/InvalidDepositAmountException.java
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/com/bam/models/CheckingAccount.java
@@ -23,5 +24,6 @@
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/com/bam/models/RegularCustomer.java
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/com/bam/exceptions/InsufficientInitialDepositException.java
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/com/bam/exceptions/OverdraftExceededException.java
+/home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/test/java/models/AccountTransferTest.java
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/com/bam/utils/InputHandler.java
 /home/bernard-mawulorm-kofi-wodoame/IdeaProjects/java-studies/bam/src/com/bam/models/PremiumCustomer.java

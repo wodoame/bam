@@ -1,4 +1,6 @@
+test/java/models/AccountProcessTransactionTest.class
 test/java/models/AccountDepositTest.class
+test/java/models/AccountTransferTest.class
 test/java/models/AccountTestBase.class
 test/java/models/CheckingAccountWithdrawTest.class
 test/java/models/SavingsAccountWithdrawTest.class
