@@ -13,8 +13,6 @@ import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
 import org.junit.platform.launcher.listeners.TestExecutionSummary;
 import org.junit.platform.engine.TestExecutionResult;
 
-import java.util.Scanner;
-
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 
 public class Main {
@@ -43,7 +41,8 @@ public class Main {
                     break;
                 case 5:
                     exit = true;
-                    System.out.println("\nThank you for using the Bank Account Management System!\nAll data saved in memory. Remember to commit your latest changest to Git!\nGoodbye!");
+                    System.out.println(
+                            "\nThank you for using the Bank Account Management System!\nAll data saved in memory. Remember to commit your latest changest to Git!\nGoodbye!");
                     break;
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -108,8 +107,10 @@ public class Main {
         }
 
         System.out.println("Select Account Type:");
-        System.out.printf("1. Savings (Interest Rate: %.1f, Minimum Balance: $%.2f)\n", SavingsAccount.INTEREST_RATE, SavingsAccount.MINIMUM_BALANCE);
-        System.out.printf("2. Checking (Overdraft: $%.2f, Monthly Fee: $%.2f)\n", CheckingAccount.OVERDRAFT_LIMIT, CheckingAccount.MONTHLY_FEE );
+        System.out.printf("1. Savings (Interest Rate: %.1f, Minimum Balance: $%.2f)\n", SavingsAccount.INTEREST_RATE,
+                SavingsAccount.MINIMUM_BALANCE);
+        System.out.printf("2. Checking (Overdraft: $%.2f, Monthly Fee: $%.2f)\n", CheckingAccount.OVERDRAFT_LIMIT,
+                CheckingAccount.MONTHLY_FEE);
         int accountTypeChoice = inputHandler.getAccountTypeChoice("Enter choice: ");
         double initialDeposit;
 
@@ -149,41 +150,75 @@ public class Main {
         System.out.println("Select Transaction Type:");
         System.out.println("1. Deposit");
         System.out.println("2. Withdrawal");
+        System.out.println("3. Transfer");
         Transaction txn;
         String type;
         double amount;
-        boolean success;
+        boolean success = false;
         int typeChoice = inputHandler.getTransactionTypeChoice("Enter choice: ");
-        if (typeChoice == 1) {
+
+        if (typeChoice == 3) {
+            // Transfer Logic
+            Account targetAccount = inputHandler.getAccount("Enter Target Account Number: ", accountManager);
+            amount = inputHandler.getWithdrawalAmount("Enter Amount to Transfer: ", account);
+
+            // Confirm transfer
+            System.out.printf("Transfer $%.2f from %s to %s?\n", amount, account.getAccountNumber(),
+                    targetAccount.getAccountNumber());
+            String confirmationChoice = inputHandler.getStringInput("Confirm transaction? (Y/N): ");
+            if (!confirmationChoice.equalsIgnoreCase("Y")) {
+                System.out.println("Transaction cancelled.");
+                return;
+            }
+
+            // Record transaction objects for confirmation/logging
+            // Note: We calculate balances speculatively for the log.
+            // If the actual transaction fails inside processTransaction, these won't be
+            // saved.
+            Transaction debitTxn = new Transaction(account.getAccountNumber(), "Transfer Out", amount,
+                    TransactionManager.getBalanceAfter(account, amount, "Transfer Out"));
+            Transaction creditTxn = new Transaction(targetAccount.getAccountNumber(), "Transfer In", amount,
+                    TransactionManager.getBalanceAfter(targetAccount, amount, "Transfer In"));
+
+            success = account.processTransaction(amount, "Transfer", targetAccount);
+
+            if (success) {
+                transactionManager.addTransaction(debitTxn);
+                transactionManager.addTransaction(creditTxn);
+                System.out.println("Transaction recorded.");
+            }
+
+        } else if (typeChoice == 1) {
             type = "Deposit";
             amount = inputHandler.getDepositAmount("Enter Amount: ");
-            txn = new Transaction(account.getAccountNumber(), type, amount, account.getBalance() + amount);
+            double balanceAfter = TransactionManager.getBalanceAfter(account, amount, type);
+            txn = new Transaction(account.getAccountNumber(), type, amount, balanceAfter);
+            boolean isConfirmed = showTransactionConfirmationPrompt(txn);
+            if (!isConfirmed)
+                return;
+            success = account.processTransaction(amount, type);
+            if (success) {
+                transactionManager.addTransaction(txn);
+                System.out.println("Transaction recorded.");
+            }
 
         } else {
             amount = inputHandler.getWithdrawalAmount("Enter Amount: ", account);
             type = "Withdrawal";
-            String accountType = account.getAccountType();
-            if(accountType.equalsIgnoreCase("savings")){
-                txn = new Transaction(account.getAccountNumber(), type, amount, account.getBalance() - amount);
-            }
-            else{
-                // checking account with overdraft
-                double balanceAfter = account.getBalance() + CheckingAccount.OVERDRAFT_LIMIT - amount;
-                txn = new Transaction(account.getAccountNumber(), type, amount, balanceAfter);
+            double balanceAfter = TransactionManager.getBalanceAfter(account, amount, type);
+            txn = new Transaction(account.getAccountNumber(), type, amount, balanceAfter);
+            boolean isConfirmed = showTransactionConfirmationPrompt(txn);
+            if (!isConfirmed)
+                return;
+            success = account.processTransaction(amount, type);
+            if (success) {
+                transactionManager.addTransaction(txn);
+                System.out.println("Transaction recorded.");
             }
         }
-        boolean isConfirmed = showTransactionConfirmationPrompt(txn);
-        if (!isConfirmed) {
-            return;
-        }
-        success = account.processTransaction(amount, type);
 
-        if (success) {
-            transactionManager.addTransaction(txn);
-            System.out.println("Transaction recorded.");
-        }
         System.out.println("Press Enter to continue...");
-        new Scanner(System.in).nextLine();
+        inputHandler.waitForEnter();
     }
 
     private static void viewTransactionHistory() {
@@ -213,8 +248,9 @@ public class Main {
                 .selectors(
                         selectClass("test.java.models.AccountDepositTest"),
                         selectClass("test.java.models.CheckingAccountWithdrawTest"),
-                        selectClass("test.java.models.SavingsAccountWithdrawTest")
-                )
+                        selectClass("test.java.models.AccountTransferTest"),
+                        selectClass("test.java.models.AccountProcessTransactionTest"),
+                        selectClass("test.java.models.SavingsAccountWithdrawTest"))
                 .build();
 
         // Create and execute the launcher
@@ -224,7 +260,6 @@ public class Main {
 
         // Get the test execution summary
         TestExecutionSummary summary = summaryListener.getSummary();
-
 
         // Display all test results in the requested format
         reportingListener.displayResults();
@@ -248,7 +283,8 @@ public class Main {
 
         // Overall status
         System.out.println();
-        if (summary.getTestsFailedCount() == 0 && summary.getTestsAbortedCount() == 0 && summary.getTestsFoundCount() > 0) {
+        if (summary.getTestsFailedCount() == 0 && summary.getTestsAbortedCount() == 0
+                && summary.getTestsFoundCount() > 0) {
             System.out.printf("✓ All %d tests passed!", summary.getTestsFoundCount());
         } else if (summary.getTestsFailedCount() > 0 || summary.getTestsAbortedCount() > 0) {
             System.out.println("✗ Some tests failed.");
@@ -257,7 +293,7 @@ public class Main {
         }
 
         System.out.println("\nPress Enter to continue...");
-        new Scanner(System.in).nextLine();
+        inputHandler.waitForEnter();
     }
 
     // Custom TestExecutionListener to capture and report all test results
@@ -266,7 +302,7 @@ public class Main {
 
         @Override
         public void executionFinished(org.junit.platform.launcher.TestIdentifier testIdentifier,
-                                     TestExecutionResult result) {
+                TestExecutionResult result) {
             // Capture test methods only (not test containers/classes)
             if (testIdentifier.isTest()) {
                 String testName = testIdentifier.getDisplayName();
