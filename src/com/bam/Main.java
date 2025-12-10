@@ -248,6 +248,8 @@ public class Main {
                 .selectors(
                         selectClass("test.java.models.AccountDepositTest"),
                         selectClass("test.java.models.CheckingAccountWithdrawTest"),
+                        selectClass("test.java.models.AccountTransferTest"),
+                        selectClass("test.java.models.AccountProcessTransactionTest"),
                         selectClass("test.java.models.SavingsAccountWithdrawTest"))
                 .build();
 
