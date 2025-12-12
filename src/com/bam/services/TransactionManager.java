@@ -4,16 +4,12 @@ import com.bam.models.Account;
 import com.bam.models.CheckingAccount;
 import com.bam.models.Transaction;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class TransactionManager {
-    private final Transaction[] transactions;
-    private int transactionCount;
-
-    public TransactionManager() {
-        this.transactions = new Transaction[200];
-        this.transactionCount = 0;
-    }
+    public static final HashMap<String, ArrayList<Transaction>> transactionsMap = new HashMap<>();
 
     public static double getBalanceAfter(Account account, double amount, String transactionType) {
         if (transactionType.equalsIgnoreCase("deposit") || transactionType.equalsIgnoreCase("transfer in")) {
@@ -34,11 +30,15 @@ public class TransactionManager {
     }
 
     public void addTransaction(Transaction transaction) {
-        if (transactionCount < transactions.length) {
-            transactions[transactionCount++] = transaction;
-        } else {
-            System.out.println("Transaction history full. Cannot add new transaction.");
+        ArrayList<Transaction> accountTransactions = transactionsMap.get(transaction.getAccountNumber());
+        if(accountTransactions != null){
+            accountTransactions.add(transaction);
+        }else{
+            ArrayList<Transaction> accTransactions = new ArrayList<>();
+            accTransactions.add(transaction);
+            transactionsMap.put(transaction.getAccountNumber(), accTransactions);
         }
+        transaction.generateTransactionId(); // IMPORTANT
     }
 
     public void viewTransactionsByAccount(String accountNumber) {
@@ -51,9 +51,10 @@ public class TransactionManager {
         System.out.printf(headerFormat, "TXN ID", "TYPE", "AMOUNT", "BALANCE", "DATE/TIME");
         System.out.println(divider);
         boolean found = false;
+        ArrayList<Transaction> accountTransactions = transactionsMap.get(accountNumber);
         // Display in reverse chronological order (newest first)
-        for (int i = transactionCount - 1; i >= 0; i--) {
-            Transaction txn = transactions[i];
+        for (int i = accountTransactions.size() - 1; i >= 0; i--) {
+            Transaction txn = accountTransactions.get(i);
             if (txn.getAccountNumber().equals(accountNumber)) {
                 String type = txn.getType().toUpperCase();
                 String sign = txn.getType().equalsIgnoreCase("deposit") || txn.getType().equalsIgnoreCase("transfer in")
@@ -78,10 +79,10 @@ public class TransactionManager {
 
         // Display summary statistics
         if (found) {
-            double totalDeposits = calculateTotalDeposits(accountNumber);
-            double totalWithdrawals = calculateTotalWithdrawals(accountNumber);
-            double totalTransfersIn = calculateTotalTransfersIn(accountNumber);
-            double totalTransfersOut = calculateTotalTransfersOut(accountNumber);
+            double totalDeposits = calculateTotalTransaction(accountNumber, "deposit");
+            double totalWithdrawals = calculateTotalTransaction(accountNumber, "withdrawal");
+            double totalTransfersIn = calculateTotalTransaction(accountNumber, "transfer in");
+            double totalTransfersOut = calculateTotalTransaction(accountNumber, "transfer out");
             double netChange = (totalDeposits + totalTransfersIn) - (totalWithdrawals + totalTransfersOut);
             System.out.println("\nSUMMARY:");
             System.out.printf("Total Deposits:     +$%.2f%n", totalDeposits);
@@ -94,52 +95,16 @@ public class TransactionManager {
         }
     }
 
-    public double calculateTotalDeposits(String accountNumber) {
+
+    public double calculateTotalTransaction(String accountNumber, String type ) {
         double total = 0;
-        for (int i = 0; i < transactionCount; i++) {
-            if (transactions[i].getAccountNumber().equals(accountNumber) &&
-                    transactions[i].getType().equalsIgnoreCase("deposit")) {
-                total += transactions[i].getAmount();
+        ArrayList<Transaction> accountTransactions = transactionsMap.get(accountNumber);
+        for (Transaction txn: accountTransactions) {
+            if(txn.getType().equalsIgnoreCase(type)){
+                total += txn.getAmount();
             }
         }
         return total;
-    }
-
-    public double calculateTotalWithdrawals(String accountNumber) {
-        double total = 0;
-        for (int i = 0; i < transactionCount; i++) {
-            if (transactions[i].getAccountNumber().equals(accountNumber) &&
-                    transactions[i].getType().equalsIgnoreCase("withdrawal")) {
-                total += transactions[i].getAmount();
-            }
-        }
-        return total;
-    }
-
-    public double calculateTotalTransfersIn(String accountNumber) {
-        double total = 0;
-        for (int i = 0; i < transactionCount; i++) {
-            if (transactions[i].getAccountNumber().equals(accountNumber) &&
-                    transactions[i].getType().equalsIgnoreCase("Transfer In")) {
-                total += transactions[i].getAmount();
-            }
-        }
-        return total;
-    }
-
-    public double calculateTotalTransfersOut(String accountNumber) {
-        double total = 0;
-        for (int i = 0; i < transactionCount; i++) {
-            if (transactions[i].getAccountNumber().equals(accountNumber) &&
-                    transactions[i].getType().equalsIgnoreCase("Transfer Out")) {
-                total += transactions[i].getAmount();
-            }
-        }
-        return total;
-    }
-
-    public int getTransactionCount() {
-        return transactionCount;
     }
 
     public void generateStatement(com.bam.models.Account account) {
@@ -165,9 +130,10 @@ public class TransactionManager {
         System.out.println(divider);
 
         boolean found = false;
+        ArrayList<Transaction> accountTransactions = transactionsMap.get(accountNumber);
         // Display in reverse chronological order (newest first)
-        for (int i = transactionCount - 1; i >= 0; i--) {
-            Transaction txn = transactions[i];
+        for (int i = accountTransactions.size() - 1; i >= 0; i--) {
+            Transaction txn = accountTransactions.get(i);
             if (txn.getAccountNumber().equals(accountNumber)) {
                 String type = txn.getType().toUpperCase();
                 String sign = txn.getType().equalsIgnoreCase("deposit") ? "+" : "-";
@@ -190,15 +156,11 @@ public class TransactionManager {
         System.out.println(divider);
 
         // Display summary statistics
-        // System.out.println("\nSTATEMENT SUMMARY:");
-        // System.out.println("-".repeat(70));
-        double totalDeposits = calculateTotalDeposits(accountNumber);
-        double totalWithdrawals = calculateTotalWithdrawals(accountNumber);
-        double totalTransfersIn = calculateTotalTransfersIn(accountNumber);
-        double totalTransfersOut = calculateTotalTransfersOut(accountNumber);
+        double totalDeposits = calculateTotalTransaction(accountNumber, "deposit");
+        double totalWithdrawals = calculateTotalTransaction(accountNumber, "withdrawal");
+        double totalTransfersIn = calculateTotalTransaction(accountNumber, "transfer in");
+        double totalTransfersOut = calculateTotalTransaction(accountNumber, "transfer out");
         double netChange = (totalDeposits + totalTransfersIn) - (totalWithdrawals + totalTransfersOut);
-        // System.out.printf("%-25s: +$%.2f%n", "Total Deposits", totalDeposits);
-        // System.out.printf("%-25s: -$%.2f%n", "Total Withdrawals", totalWithdrawals);
         System.out.printf("%-25s: %s$%.2f%n", "Net Change", netChange >= 0 ? "+" : "", netChange);
         System.out.println("\n✓ Statement generated successfully.");
         System.out.println("\nPress Enter to continue...");
