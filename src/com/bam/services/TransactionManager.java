@@ -9,11 +9,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class TransactionManager {
-    private final HashMap<String, ArrayList<Transaction>> transactionsMap;
-
-    public TransactionManager() {
-        this.transactionsMap = new HashMap<>();
-    }
+    public static final HashMap<String, ArrayList<Transaction>> transactionsMap = new HashMap<>();
 
     public static double getBalanceAfter(Account account, double amount, String transactionType) {
         if (transactionType.equalsIgnoreCase("deposit") || transactionType.equalsIgnoreCase("transfer in")) {
@@ -42,6 +38,7 @@ public class TransactionManager {
             accTransactions.add(transaction);
             transactionsMap.put(transaction.getAccountNumber(), accTransactions);
         }
+        transaction.generateTransactionId(); // IMPORTANT
     }
 
     public void viewTransactionsByAccount(String accountNumber) {
