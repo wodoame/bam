@@ -26,7 +26,7 @@ public class Transaction {
     // Called after a transaction is added
     public void generateTransactionId() {
         if (!idGenerated) {
-            ArrayList<Transaction> accountTransactions = TransactionManager.transactionsMap.get(accountNumber);
+            ArrayList<Transaction> accountTransactions = (ArrayList<Transaction>) TransactionManager.getTransactions(accountNumber);
             int count = accountTransactions.size();
             transactionId = String.format("TXN%03d", count);
             idGenerated = true; // making the id generation idempotent

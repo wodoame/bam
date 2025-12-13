@@ -7,16 +7,21 @@ import com.bam.models.RegularCustomer;
 import com.bam.models.SavingsAccount;
 import com.bam.models.Transaction;
 import com.bam.utils.InputHandler;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class AccountManager {
-    private final Account[] accounts;
-    private int accountCount;
+    private final ArrayList<Account> accounts;
+    private final Map<String, Account> accountLookup;
     private final InputHandler inputHandler;
 
     public AccountManager(InputHandler inputHandler) {
-        this.accounts = new Account[50];
-        this.accountCount = 0;
+        this.accounts = new ArrayList<>();
+        this.accountLookup = new HashMap<>();
         this.inputHandler = inputHandler;
     }
 
@@ -26,26 +31,25 @@ public class AccountManager {
     }
 
     public void addAccount(Account account, boolean silent) {
-        if (accountCount < accounts.length) {
-            accounts[accountCount++] = account;
-            if (!silent) {
-                System.out.println("\nAccount created successfully!");
-                account.displayAccountDetails();
-                System.out.println("\nPress Enter to continue...");
-                inputHandler.waitForEnter();
-            }
-        } else {
-            System.out.println("Account limit reached. Cannot create new account.");
+        if (accountLookup.putIfAbsent(account.getAccountNumber(), account) != null) {
+            throw new IllegalArgumentException(
+                    "Account number " + account.getAccountNumber() + " already exists.");
+        }
+        accounts.add(account);
+        if (!silent) {
+            System.out.println("\nAccount created successfully!");
+            account.displayAccountDetails();
+            System.out.println("\nPress Enter to continue...");
+            inputHandler.waitForEnter();
         }
     }
 
     public Account findAccount(String accountNumber) {
-        for (int i = 0; i < accountCount; i++) {
-            if (accounts[i].getAccountNumber().equals(accountNumber)) {
-                return accounts[i];
-            }
+        Account account = accountLookup.get(accountNumber);
+        if (account == null) {
+            throw new InvalidAccountException("Account number " + accountNumber + " not found.");
         }
-        throw new InvalidAccountException("Account number " + accountNumber + " not found.");
+        return account;
     }
 
     public void viewAllAccounts() {
@@ -57,64 +61,60 @@ public class AccountManager {
         System.out.println(divider);
         System.out.printf(headerFormat, "ACC NO", "CUSTOMER NAME", "TYPE", "BALANCE", "STATUS");
         System.out.println(divider);
-        for (int i = 0; i < accountCount; i++) {
-            Account account = accounts[i];
+        accounts.stream()
+                .sorted(Comparator.comparing(Account::getAccountNumber))
+                .forEach(account -> {
+                    // For checking accounts, show balance + overdraft limit
+                    String balanceValue;
+                    if (account instanceof CheckingAccount checkingAcc) {
+                        double totalAvailable = account.getBalance() + checkingAcc.getOverdraftLimit();
+                        balanceValue = String.format("$%.2f", totalAvailable);
+                    } else {
+                        balanceValue = String.format("$%.2f", account.getBalance());
+                    }
 
-            // For checking accounts, show balance + overdraft limit
-            String balanceValue;
-            if (account instanceof CheckingAccount checkingAcc) {
-                double totalAvailable = account.getBalance() + checkingAcc.getOverdraftLimit();
-                balanceValue = String.format("$%.2f", totalAvailable);
-            } else {
-                balanceValue = String.format("$%.2f", account.getBalance());
-            }
+                    // Print main account row
+                    System.out.printf(
+                            rowFormat,
+                            account.getAccountNumber(),
+                            account.getCustomer().getName(),
+                            account.getAccountType(),
+                            balanceValue,
+                            account.getStatus()
+                    );
 
-            // Print main account row
-            System.out.printf(
-                    rowFormat,
-                    account.getAccountNumber(),
-                    account.getCustomer().getName(),
-                    account.getAccountType(),
-                    balanceValue,
-                    account.getStatus()
-            );
+                    // Print account-specific details on the next line
+                    if (account instanceof SavingsAccount savingsAcc) {
+                        System.out.printf("%-10s | %-20s | %-30s |%n",
+                                "",
+                                "",
+                                String.format("Interest Rate: %.1f%%", savingsAcc.getInterestRate()));
+                        System.out.printf("%-10s | %-20s | %-30s |%n",
+                                "",
+                                "",
+                                String.format("Min Balance: $%.0f", savingsAcc.getMinimumBalance()));
+                    } else if (account instanceof CheckingAccount checkingAcc) {
+                        System.out.printf("%-10s | %-20s | %-30s |%n",
+                                "",
+                                "",
+                                String.format("Overdraft Limit: $%.0f", checkingAcc.getOverdraftLimit()));
+                        System.out.printf("%-10s | %-20s | %-30s |%n",
+                                "",
+                                "",
+                                String.format("Monthly Fee: $%.0f", checkingAcc.getMonthlyFee()));
+                    }
 
-            // Print account-specific details on the next line
-            if (account instanceof SavingsAccount savingsAcc) {
-                System.out.printf("%-10s | %-20s | %-30s |%n",
-                    "",
-                    "",
-                    String.format("Interest Rate: %.1f%%", savingsAcc.getInterestRate()));
-                System.out.printf("%-10s | %-20s | %-30s |%n",
-                    "",
-                    "",
-                    String.format("Min Balance: $%.0f", savingsAcc.getMinimumBalance()));
-            } else if (account instanceof CheckingAccount checkingAcc) {
-                System.out.printf("%-10s | %-20s | %-30s |%n",
-                    "",
-                    "",
-                    String.format("Overdraft Limit: $%.0f", checkingAcc.getOverdraftLimit()));
-                System.out.printf("%-10s | %-20s | %-30s |%n",
-                    "",
-                    "",
-                    String.format("Monthly Fee: $%.0f", checkingAcc.getMonthlyFee()));
-            }
-
-            // Add row separator after each account
-            System.out.println(divider);
-        }
-        System.out.println("Total Accounts: " + accountCount);
+                    // Add row separator after each account
+                    System.out.println(divider);
+                });
+        System.out.println("Total Accounts: " + accounts.size());
         System.out.printf("Total Bank Balance: $%.2f%n", getTotalBalance());
         System.out.println("\nPress Enter to continue...");
         inputHandler.waitForEnter();
     }
 
     public double getTotalBalance() {
-        double total = 0;
-        for (int i = 0; i < accountCount; i++) {
-            total += accounts[i].getBalance();
-        }
-        return total;
+        return accounts.stream().mapToDouble(Account::getBalance).sum();
     }
 
     public void generateSeedAccounts(TransactionManager transactionManager) {
@@ -149,6 +149,10 @@ public class AccountManager {
     }
 
     public int getAccountCount() {
-        return accountCount;
+        return accounts.size();
+    }
+
+    public ArrayList<Account> getAccountsSnapshot() {
+        return new ArrayList<>(accounts);
     }
 }

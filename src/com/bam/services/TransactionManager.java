@@ -5,11 +5,17 @@ import com.bam.models.CheckingAccount;
 import com.bam.models.Transaction;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class TransactionManager {
-    public static final HashMap<String, ArrayList<Transaction>> transactionsMap = new HashMap<>();
+    private  static final Map<String, List<Transaction>> transactionsMap = new HashMap<>();
 
     public static double getBalanceAfter(Account account, double amount, String transactionType) {
         if (transactionType.equalsIgnoreCase("deposit") || transactionType.equalsIgnoreCase("transfer in")) {
@@ -30,14 +36,9 @@ public class TransactionManager {
     }
 
     public void addTransaction(Transaction transaction) {
-        ArrayList<Transaction> accountTransactions = transactionsMap.get(transaction.getAccountNumber());
-        if(accountTransactions != null){
-            accountTransactions.add(transaction);
-        }else{
-            ArrayList<Transaction> accTransactions = new ArrayList<>();
-            accTransactions.add(transaction);
-            transactionsMap.put(transaction.getAccountNumber(), accTransactions);
-        }
+        transactionsMap
+                .computeIfAbsent(transaction.getAccountNumber(), key -> new ArrayList<>())
+                .add(transaction);
         transaction.generateTransactionId(); // IMPORTANT
     }
 
@@ -50,46 +51,32 @@ public class TransactionManager {
         System.out.println(divider);
         System.out.printf(headerFormat, "TXN ID", "TYPE", "AMOUNT", "BALANCE", "DATE/TIME");
         System.out.println(divider);
-        boolean found = false;
-        ArrayList<Transaction> accountTransactions = transactionsMap.get(accountNumber);
-        // Display in reverse chronological order (newest first)
-        for (int i = accountTransactions.size() - 1; i >= 0; i--) {
-            Transaction txn = accountTransactions.get(i);
-            if (txn.getAccountNumber().equals(accountNumber)) {
-                String type = txn.getType().toUpperCase();
-                String sign = txn.getType().equalsIgnoreCase("deposit") || txn.getType().equalsIgnoreCase("transfer in")
-                        ? "+"
-                        : "-";
-                String amountValue = String.format("%s$%.2f", sign, txn.getAmount());
-                String balanceValue = String.format("$%.2f", txn.getBalanceAfter());
-                System.out.printf(
-                        rowFormat,
-                        txn.getTransactionId(),
-                        type,
-                        amountValue,
-                        balanceValue,
-                        txn.getTimestamp().toString());
-                found = true;
-            }
-        }
-        if (!found) {
+        List<Transaction> accountTransactions = getTransactions(accountNumber);
+        accountTransactions.stream()
+                .sorted(Comparator.comparing(Transaction::getTimestamp).reversed())
+                .forEach(txn -> {
+                    String type = txn.getType().toUpperCase();
+                    String sign = txn.getType().equalsIgnoreCase("deposit") || txn.getType().equalsIgnoreCase("transfer in")
+                            ? "+"
+                            : "-";
+                    String amountValue = String.format("%s$%.2f", sign, txn.getAmount());
+                    String balanceValue = String.format("$%.2f", txn.getBalanceAfter());
+                    System.out.printf(
+                            rowFormat,
+                            txn.getTransactionId(),
+                            type,
+                            amountValue,
+                            balanceValue,
+                            txn.getTimestamp().toString());
+                });
+        if (accountTransactions.isEmpty()) {
             System.out.println("No transactions found for this account.");
         }
         System.out.println(divider);
 
         // Display summary statistics
-        if (found) {
-            double totalDeposits = calculateTotalTransaction(accountNumber, "deposit");
-            double totalWithdrawals = calculateTotalTransaction(accountNumber, "withdrawal");
-            double totalTransfersIn = calculateTotalTransaction(accountNumber, "transfer in");
-            double totalTransfersOut = calculateTotalTransaction(accountNumber, "transfer out");
-            double netChange = (totalDeposits + totalTransfersIn) - (totalWithdrawals + totalTransfersOut);
-            System.out.println("\nSUMMARY:");
-            System.out.printf("Total Deposits:     +$%.2f%n", totalDeposits);
-            System.out.printf("Total Withdrawals:  -$%.2f%n", totalWithdrawals);
-            System.out.printf("Total Transfers In: +$%.2f%n", totalTransfersIn);
-            System.out.printf("Total Transfers Out: -$%.2f%n", totalTransfersOut);
-            System.out.printf("Net Change:         %s$%.2f%n", netChange >= 0 ? "+" : "", netChange);
+        if (!accountTransactions.isEmpty()) {
+            printSummary(accountNumber);
             System.out.println("\nPress Enter to continue...");
             new Scanner(System.in).nextLine();
         }
@@ -97,14 +84,10 @@ public class TransactionManager {
 
 
     public double calculateTotalTransaction(String accountNumber, String type ) {
-        double total = 0;
-        ArrayList<Transaction> accountTransactions = transactionsMap.get(accountNumber);
-        for (Transaction txn: accountTransactions) {
-            if(txn.getType().equalsIgnoreCase(type)){
-                total += txn.getAmount();
-            }
-        }
-        return total;
+        return getTransactions(accountNumber).stream()
+                .filter(txn -> txn.getType().equalsIgnoreCase(type))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
     }
 
     public void generateStatement(com.bam.models.Account account) {
@@ -129,41 +112,61 @@ public class TransactionManager {
         System.out.printf(headerFormat, "TXN ID", "TYPE", "AMOUNT", "BALANCE", "DATE/TIME");
         System.out.println(divider);
 
-        boolean found = false;
-        ArrayList<Transaction> accountTransactions = transactionsMap.get(accountNumber);
-        // Display in reverse chronological order (newest first)
-        for (int i = accountTransactions.size() - 1; i >= 0; i--) {
-            Transaction txn = accountTransactions.get(i);
-            if (txn.getAccountNumber().equals(accountNumber)) {
-                String type = txn.getType().toUpperCase();
-                String sign = txn.getType().equalsIgnoreCase("deposit") ? "+" : "-";
-                String amountValue = String.format("%s$%.2f", sign, txn.getAmount());
-                String balanceValue = String.format("$%.2f", txn.getBalanceAfter());
-                System.out.printf(
-                        rowFormat,
-                        txn.getTransactionId(),
-                        type,
-                        amountValue,
-                        balanceValue,
-                        txn.getTimestamp().toString());
-                found = true;
-            }
-        }
+        List<Transaction> accountTransactions = getTransactions(accountNumber);
+        accountTransactions.stream()
+                .sorted(Comparator.comparing(Transaction::getTimestamp).reversed())
+                .forEach(txn -> {
+                    String type = txn.getType().toUpperCase();
+                    String sign = txn.getType().equalsIgnoreCase("deposit") ? "+" : "-";
+                    String amountValue = String.format("%s$%.2f", sign, txn.getAmount());
+                    String balanceValue = String.format("$%.2f", txn.getBalanceAfter());
+                    System.out.printf(
+                            rowFormat,
+                            txn.getTransactionId(),
+                            type,
+                            amountValue,
+                            balanceValue,
+                            txn.getTimestamp().toString());
+                });
 
-        if (!found) {
+        if (accountTransactions.isEmpty()) {
             System.out.println("No transactions found for this account.");
         }
         System.out.println(divider);
 
         // Display summary statistics
+        printSummary(accountNumber);
+        System.out.println("\n✓ Statement generated successfully.");
+        System.out.println("\nPress Enter to continue...");
+        new Scanner(System.in).nextLine();
+    }
+
+    public static List<Transaction> getTransactions(String accountNumber) {
+        return transactionsMap.getOrDefault(accountNumber, List.of());
+    }
+
+    public List<Transaction> getTransactionsMatching(String accountNumber, Predicate<Transaction> predicate) {
+        return getTransactions(accountNumber).stream()
+                .filter(predicate)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<Transaction> getMostRecentTransaction(String accountNumber) {
+        return getTransactions(accountNumber).stream()
+                .max(Comparator.comparing(Transaction::getTimestamp));
+    }
+
+    private void printSummary(String accountNumber) {
         double totalDeposits = calculateTotalTransaction(accountNumber, "deposit");
         double totalWithdrawals = calculateTotalTransaction(accountNumber, "withdrawal");
         double totalTransfersIn = calculateTotalTransaction(accountNumber, "transfer in");
         double totalTransfersOut = calculateTotalTransaction(accountNumber, "transfer out");
         double netChange = (totalDeposits + totalTransfersIn) - (totalWithdrawals + totalTransfersOut);
-        System.out.printf("%-25s: %s$%.2f%n", "Net Change", netChange >= 0 ? "+" : "", netChange);
-        System.out.println("\n✓ Statement generated successfully.");
-        System.out.println("\nPress Enter to continue...");
-        new Scanner(System.in).nextLine();
+        System.out.println("\nSUMMARY:");
+        System.out.printf("Total Deposits:     +$%.2f%n", totalDeposits);
+        System.out.printf("Total Withdrawals:  -$%.2f%n", totalWithdrawals);
+        System.out.printf("Total Transfers In: +$%.2f%n", totalTransfersIn);
+        System.out.printf("Total Transfers Out: -$%.2f%n", totalTransfersOut);
+        System.out.printf("Net Change:         %s$%.2f%n", netChange >= 0 ? "+" : "", netChange);
     }
 }
