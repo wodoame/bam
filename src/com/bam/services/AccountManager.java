@@ -7,16 +7,16 @@ import com.bam.models.RegularCustomer;
 import com.bam.models.SavingsAccount;
 import com.bam.models.Transaction;
 import com.bam.utils.InputHandler;
+
+import java.util.ArrayList;
 import java.util.Random;
 
 public class AccountManager {
-    private final Account[] accounts;
-    private int accountCount;
+    private final ArrayList<Account> accounts;
     private final InputHandler inputHandler;
 
     public AccountManager(InputHandler inputHandler) {
-        this.accounts = new Account[50];
-        this.accountCount = 0;
+        this.accounts = new ArrayList<>();
         this.inputHandler = inputHandler;
     }
 
@@ -26,23 +26,19 @@ public class AccountManager {
     }
 
     public void addAccount(Account account, boolean silent) {
-        if (accountCount < accounts.length) {
-            accounts[accountCount++] = account;
-            if (!silent) {
-                System.out.println("\nAccount created successfully!");
-                account.displayAccountDetails();
-                System.out.println("\nPress Enter to continue...");
-                inputHandler.waitForEnter();
-            }
-        } else {
-            System.out.println("Account limit reached. Cannot create new account.");
+        accounts.add(account);
+        if (!silent) {
+            System.out.println("\nAccount created successfully!");
+            account.displayAccountDetails();
+            System.out.println("\nPress Enter to continue...");
+            inputHandler.waitForEnter();
         }
     }
 
     public Account findAccount(String accountNumber) {
-        for (int i = 0; i < accountCount; i++) {
-            if (accounts[i].getAccountNumber().equals(accountNumber)) {
-                return accounts[i];
+        for (Account account: accounts) {
+            if (account.getAccountNumber().equals(accountNumber)) {
+                return account;
             }
         }
         throw new InvalidAccountException("Account number " + accountNumber + " not found.");
@@ -57,9 +53,7 @@ public class AccountManager {
         System.out.println(divider);
         System.out.printf(headerFormat, "ACC NO", "CUSTOMER NAME", "TYPE", "BALANCE", "STATUS");
         System.out.println(divider);
-        for (int i = 0; i < accountCount; i++) {
-            Account account = accounts[i];
-
+        for (Account account: accounts) {
             // For checking accounts, show balance + overdraft limit
             String balanceValue;
             if (account instanceof CheckingAccount checkingAcc) {
@@ -103,7 +97,7 @@ public class AccountManager {
             // Add row separator after each account
             System.out.println(divider);
         }
-        System.out.println("Total Accounts: " + accountCount);
+        System.out.println("Total Accounts: " + accounts.size());
         System.out.printf("Total Bank Balance: $%.2f%n", getTotalBalance());
         System.out.println("\nPress Enter to continue...");
         inputHandler.waitForEnter();
@@ -111,8 +105,8 @@ public class AccountManager {
 
     public double getTotalBalance() {
         double total = 0;
-        for (int i = 0; i < accountCount; i++) {
-            total += accounts[i].getBalance();
+        for (Account account: accounts) {
+            total += account.getBalance();
         }
         return total;
     }
@@ -149,6 +143,6 @@ public class AccountManager {
     }
 
     public int getAccountCount() {
-        return accountCount;
+        return accounts.size();
     }
 }
