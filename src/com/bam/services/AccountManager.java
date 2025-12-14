@@ -8,6 +8,7 @@ import com.bam.models.RegularCustomer;
 import com.bam.models.SavingsAccount;
 import com.bam.models.Transaction;
 import com.bam.utils.InputHandler;
+import com.bam.utils.InputValidator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class AccountManager {
     private final InputHandler inputHandler;
     private final FilePersistenceService filePersistenceService;
     private final TransactionManager transactionManager;
+    private final InputValidator validator = new InputValidator();
 
     /**
      * Creates a manager with interactive input handling and transaction coordination.
@@ -69,6 +71,7 @@ public class AccountManager {
      * @throws InvalidAccountException when the account does not exist
      */
     public Account findAccount(String accountNumber) {
+        validator.validateAccountNumberFormat(accountNumber);
         Account account = accountLookup.get(accountNumber);
         if (account == null) {
             throw new InvalidAccountException("Account number " + accountNumber + " not found.");
@@ -156,7 +159,7 @@ public class AccountManager {
 
         for (String name: names){
             double initialDeposit = 500 + (random.nextDouble() * 1500); // Random deposit between 500 and 2000
-            RegularCustomer customer = new RegularCustomer(name, 30, "0123456789", "Accra, Ghana");
+            RegularCustomer customer = new RegularCustomer(name, 30, "0123456789", name.toLowerCase() + "@example.com", "Accra, Ghana");
 
             // Randomly choose between Savings (0) and Checking (1) account
             Account account;
