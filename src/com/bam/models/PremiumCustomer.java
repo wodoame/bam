@@ -9,15 +9,15 @@ public class PremiumCustomer extends Customer {
     /**
      * Creates a premium customer, auto-generating an ID.
      */
-    public PremiumCustomer(String name, int age, String contact, String address) {
-        super(name, age, contact, address);
+    public PremiumCustomer(String name, int age, String contact, String email, String address) {
+        super(name, age, contact, email, address);
     }
 
     /**
      * Rehydrates a premium customer from persisted state.
      */
-    public PremiumCustomer(String name, int age, String contact, String address, String customerId) {
-        super(name, age, contact, address, customerId);
+    public PremiumCustomer(String name, int age, String contact, String email, String address, String customerId) {
+        super(name, age, contact, email, address, customerId);
     }
 
     /** {@inheritDoc} */
@@ -27,6 +27,7 @@ public class PremiumCustomer extends Customer {
         System.out.println("Name: " + name);
         System.out.println("Type: " + getCustomerType());
         System.out.println("Contact: " + contact);
+        System.out.println("Email: " + email);
         System.out.println("Address: " + address);
         System.out.println("Benefits: No monthly fees, Priority service");
     }

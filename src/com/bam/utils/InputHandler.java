@@ -95,9 +95,10 @@ public class InputHandler {
         while (true) {
             accountNumber = getStringInput(prompt);
             try {
+                 validator.validateAccountNumberFormat(accountNumber);
                  account = acm.findAccount(accountNumber);
                  return account;
-            } catch (InvalidAccountException e) {
+            } catch (InvalidAccountException | InvalidAccountNumberException e) {
                 System.out.println(e.getMessage());
             }
         }
@@ -264,6 +265,20 @@ public class InputHandler {
             }
         }
         return amount;
+    }
+
+    public String getEmail(String prompt) {
+        String email;
+        while (true) {
+            email = getStringInput(prompt);
+            try {
+                validator.validateEmail(email);
+                break; // Valid input, exit loop
+            } catch (InvalidEmailException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        return email;
     }
 
     /**

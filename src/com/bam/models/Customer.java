@@ -8,27 +8,29 @@ public abstract class Customer {
     protected String name;
     protected int age;
     protected String contact;
+    protected String email;
     protected String address;
     protected static int customerCounter = 1;
 
     /**
      * Creates a new customer with an auto-generated ID.
      */
-    public Customer(String name, int age, String contact, String address) {
-        this(name, age, contact, address, null, true);
+    public Customer(String name, int age, String contact, String email, String address) {
+        this(name, age, contact, email, address, null, true);
     }
 
     /**
      * Rehydrates a customer from persisted data.
      */
-    protected Customer(String name, int age, String contact, String address, String customerId) {
-        this(name, age, contact, address, customerId, false);
+    protected Customer(String name, int age, String contact, String email, String address, String customerId) {
+        this(name, age, contact, email, address, customerId, false);
     }
 
-    private Customer(String name, int age, String contact, String address, String customerId, boolean autoGenerateId) {
+    private Customer(String name, int age, String contact, String email, String address, String customerId, boolean autoGenerateId) {
         this.name = name;
         this.age = age;
         this.contact = contact;
+        this.email = email;
         this.address = address;
         if (autoGenerateId) {
             this.customerId = generateCustomerId();
@@ -71,6 +73,11 @@ public abstract class Customer {
     /** @return contact phone number. */
     public String getContact() {
         return contact;
+    }
+
+    /** @return email address. */
+    public String getEmail() {
+        return email;
     }
 
     /** @return postal address. */

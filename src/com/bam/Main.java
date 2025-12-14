@@ -121,13 +121,14 @@ public class Main {
         String name = inputHandler.getName("Enter Customer Name: ");
         int age = inputHandler.getAge("Enter Age: ");
         String contact = inputHandler.getContact("Enter Contact Number: ");
+        String email = inputHandler.getEmail("Enter Email Address: ");
         String address = inputHandler.getStringInput("Enter Address: ");
 
         Customer customer;
         if (customerTypeChoice == 1) {
-            customer = new RegularCustomer(name, age, contact, address);
+            customer = new RegularCustomer(name, age, contact, email, address);
         } else {
-            customer = new PremiumCustomer(name, age, contact, address);
+            customer = new PremiumCustomer(name, age, contact, email, address);
         }
 
         System.out.println("Select Account Type:");

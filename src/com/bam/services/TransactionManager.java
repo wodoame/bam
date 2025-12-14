@@ -4,6 +4,7 @@ import com.bam.models.Account;
 import com.bam.models.CheckingAccount;
 import com.bam.models.Transaction;
 import com.bam.utils.InputHandler;
+import com.bam.utils.InputValidator;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,6 +25,7 @@ public class TransactionManager {
     private static final Map<String, Integer> transactionCounters = new HashMap<>();
     private static final Object ledgerLock = new Object();
     private final InputHandler inputHandler;
+    private final InputValidator validator = new InputValidator();
 
     /**
      * Creates a manager optionally wired to interactive input handlers.
@@ -121,6 +123,7 @@ public class TransactionManager {
      * Displays the transaction history for a single account, including sorting prompt.
      */
     public void viewTransactionsByAccount(String accountNumber) {
+        validator.validateAccountNumberFormat(accountNumber);
         System.out.println("TRANSACTION HISTORY FOR ACCOUNT NUMBER " + accountNumber);
         final List<Transaction> accountTransactions = getTransactions(accountNumber);
         final List<Transaction> sortedTransactions = sortTransactions(accountTransactions);
@@ -148,6 +151,7 @@ public class TransactionManager {
      * Prints a rich statement for the provided account, including transactions and summary.
      */
     public void generateStatement(com.bam.models.Account account) {
+        validator.validateAccountNumberFormat(account.getAccountNumber());
         String accountNumber = account.getAccountNumber();
         System.out.println("\n" + "=".repeat(70));
         System.out.println("ACCOUNT STATEMENT");
