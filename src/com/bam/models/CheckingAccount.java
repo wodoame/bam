@@ -1,18 +1,33 @@
 package com.bam.models;
 
 
+/**
+ * Checking account variant with overdraft support and optional monthly fees.
+ */
 public class CheckingAccount extends Account {
     private final double overdraftLimit;
     private final double monthlyFee;
     public static final double OVERDRAFT_LIMIT = 1000.0;
     public static final double MONTHLY_FEE = 10.0;
 
+    /**
+     * Creates a checking account that auto-generates an account number.
+     */
     public CheckingAccount(Customer customer, double initialDeposit) {
         super(customer, initialDeposit);
         this.overdraftLimit = OVERDRAFT_LIMIT;
         this.monthlyFee = customer.getCustomerType().equalsIgnoreCase("premium")? 0: MONTHLY_FEE;
     }
+    /**
+     * Rehydrates a checking account from persisted state.
+     */
+    public CheckingAccount(Customer customer, double balance, String accountNumber, String status) {
+        super(customer, balance, accountNumber, status);
+        this.overdraftLimit = OVERDRAFT_LIMIT;
+        this.monthlyFee = customer.getCustomerType().equalsIgnoreCase("premium") ? 0 : MONTHLY_FEE;
+    }
 
+    /** {@inheritDoc} */
     @Override
     public void displayAccountDetails() {
         System.out.println("Account ID: " + accountNumber);
@@ -24,11 +39,15 @@ public class CheckingAccount extends Account {
         System.out.println("Status: " + status);
     }
 
+    /** {@inheritDoc} */
     @Override
     public String getAccountType() {
         return "Checking";
     }
 
+    /**
+     * Deducts the monthly maintenance fee unless the customer qualifies for a waiver.
+     */
     public void applyMonthlyFee() {
         // Check if customer is premium to waive fee?
         // Instructions say "Premium customers have waived monthly fees".
@@ -41,10 +60,12 @@ public class CheckingAccount extends Account {
         }
     }
 
+    /** @return overdraft buffer available for withdrawals. */
     public double getOverdraftLimit() {
         return overdraftLimit;
     }
 
+    /** @return monthly fee charged to non-premium customers. */
     public double getMonthlyFee() {
         return monthlyFee;
     }

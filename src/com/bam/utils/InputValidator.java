@@ -5,13 +5,18 @@ import com.bam.models.Account;
 import com.bam.models.CheckingAccount;
 import com.bam.models.SavingsAccount;
 
+/**
+ * Performs reusable validation for user inputs across the CLI.
+ */
 public class InputValidator {
+    /** Ensures the applicant is at least 18 years old. */
     public void validateAge(int age) {
         if (age < 18) {
             throw new InvalidAgeException("You must be at least 18 years old to create an account.");
         }
     }
 
+    /** Validates that a name is non-empty and alphabetic. */
     public void validateName(String name) {
         if (name.trim().isEmpty()) {
             throw new InvalidNameException("Name cannot be empty.");
@@ -21,12 +26,14 @@ public class InputValidator {
         }
     }
 
+    /** Requires a 10-digit numeric contact number. */
     public void validateContact(String contact) {
         if (!contact.matches("\\d{10}")) {
             throw new InvalidContactException("Contact number must be exactly 10 digits.");
         }
     }
 
+    /** Enforces minimum opening deposits based on account type. */
     public void validateInitialDepositAmount(double amount, String accountType) {
         if (accountType.equalsIgnoreCase("savings")) {
             if (amount < SavingsAccount.MINIMUM_BALANCE) {
@@ -36,30 +43,49 @@ public class InputValidator {
         }
     }
 
+    /** Accepts only supported account type menu selections. */
     public void validateAccountTypeChoice(int choice) {
         if (choice != 1 && choice != 2) {
             throw new InvalidChoiceException("Please select a valid option (1 or 2)");
         }
     }
 
+    /** Accepts only supported customer type menu selections. */
     public void validateCustomerTypeChoice(int choice) {
         if (choice != 1 && choice != 2) {
             throw new InvalidChoiceException("Please select a valid option (1 or 2)");
         }
     }
 
+    /** Accepts only supported transaction type menu selections. */
     public void validateTransactionTypeChoice(int choice) {
         if (choice != 1 && choice != 2 && choice != 3) {
             throw new InvalidChoiceException("Please select a valid option (1, 2 or 3)");
         }
     }
 
+    /** Accepts only supported transaction sort field choices. */
+    public void validateSortFieldChoice(int choice) {
+        if (choice < 1 || choice > 4) {
+            throw new InvalidChoiceException("Please select a valid option (1 - 4)");
+        }
+    }
+
+    /** Accepts only ascending or descending selection. */
+    public void validateSortDirectionChoice(int choice) {
+        if (choice != 1 && choice != 2) {
+            throw new InvalidChoiceException("Please select a valid option (1 or 2)");
+        }
+    }
+
+    /** Ensures deposits are positive. */
     public void validateDepositAmount(double amount) {
         if (amount <= 0) {
             throw new InvalidDepositAmountException("Deposit amount must be greater than zero.");
         }
     }
 
+    /** Validates withdrawal limits based on account type and overdraft rules. */
     public void validateWithdrawalAmount(double amount, Account account) {
         if (amount <= 0) {
             throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");

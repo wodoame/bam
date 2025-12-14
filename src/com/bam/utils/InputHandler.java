@@ -5,16 +5,25 @@ import com.bam.services.AccountManager;
 
 import java.util.Scanner;
 
+/**
+ * Wraps console prompts, validation, and typed input handling for the CLI.
+ */
 // performs input handling
 public class InputHandler {
     private final Scanner scanner = new Scanner(System.in);
     private final InputValidator validator = new InputValidator();
 
+    /**
+     * Reads a full line from the console after showing a prompt.
+     */
     public String getStringInput(String prompt) {
         System.out.print(prompt);
         return scanner.nextLine();
     }
 
+    /**
+     * Reads a double value, re-prompting until valid.
+     */
     public double getDoubleInput(String prompt, String errorMessage) {
         System.out.print(prompt);
         while (!scanner.hasNextDouble()) {
@@ -28,6 +37,9 @@ public class InputHandler {
     }
 
 
+    /**
+     * Reads an integer value, re-prompting until valid.
+     */
     public int getIntInput(String prompt, String errorMessage) {
         System.out.print(prompt);
         while (!scanner.hasNextInt()) {
@@ -40,6 +52,9 @@ public class InputHandler {
         return input;
     }
 
+    /**
+     * Collects and validates an age value.
+     */
     public int getAge(String prompt) {
         int age;
         while (true) {
@@ -54,6 +69,9 @@ public class InputHandler {
         return age;
     }
 
+    /**
+     * Collects and validates a person name.
+     */
     public String getName(String prompt) {
         String name;
         while (true) {
@@ -68,6 +86,9 @@ public class InputHandler {
         return name;
     }
 
+    /**
+     * Resolves an account by repeatedly asking for an account number.
+     */
     public Account getAccount(String prompt, AccountManager acm) {
         String accountNumber;
         Account account;
@@ -82,6 +103,9 @@ public class InputHandler {
         }
     }
 
+    /**
+     * Collects and validates a contact number.
+     */
     public String getContact(String prompt) {
         String contact;
         while (true) {
@@ -96,6 +120,9 @@ public class InputHandler {
         return contact;
     }
 
+    /**
+     * Prompts for an initial deposit, enforcing account-specific minimums.
+     */
     public double getInitialDeposit(String prompt, String accountType) {
         double depositAmount;
         while (true) {
@@ -111,6 +138,9 @@ public class InputHandler {
         return depositAmount;
     }
 
+    /**
+     * Captures the user's account type selection.
+     */
     public int getAccountTypeChoice(String prompt) {
         int choice;
         while (true) {
@@ -126,6 +156,9 @@ public class InputHandler {
         return choice;
     }
 
+    /**
+     * Captures the user's customer type selection.
+     */
     public int getCustomerTypeChoice(String prompt) {
         int choice;
         while (true) {
@@ -141,6 +174,9 @@ public class InputHandler {
         return choice;
     }
 
+    /**
+     * Captures the user's transaction type selection.
+     */
     public int getTransactionTypeChoice(String prompt) {
         int choice;
         while (true) {
@@ -156,6 +192,47 @@ public class InputHandler {
         return choice;
     }
 
+    /**
+     * Prompts the operator to choose the transaction sort field.
+     */
+    public int getTransactionSortFieldChoice() {
+        System.out.println("Select sort field:");
+        System.out.println("1. Date/Time");
+        System.out.println("2. Amount");
+        System.out.println("3. Type");
+        System.out.println("4. Balance After");
+        while (true) {
+            int choice = getIntInput("Enter choice (1-4): ", "Choice must be a number");
+            try {
+                validator.validateSortFieldChoice(choice);
+                return choice;
+            } catch (InvalidChoiceException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Prompts the operator to choose ascending or descending sort order.
+     */
+    public int getTransactionSortDirectionChoice() {
+        System.out.println("Select sort order:");
+        System.out.println("1. Ascending");
+        System.out.println("2. Descending");
+        while (true) {
+            int choice = getIntInput("Enter choice (1-2): ", "Choice must be a number");
+            try {
+                validator.validateSortDirectionChoice(choice);
+                return choice;
+            } catch (InvalidChoiceException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Reads and validates deposit amounts.
+     */
     public double getDepositAmount(String prompt) {
         double amount;
         while (true) {
@@ -171,6 +248,9 @@ public class InputHandler {
         return amount;
     }
 
+    /**
+     * Reads and validates withdrawal amounts against an account.
+     */
     public double getWithdrawalAmount(String prompt, Account account) {
         double amount;
         while (true) {
@@ -186,10 +266,16 @@ public class InputHandler {
         return amount;
     }
 
+    /**
+     * Waits for the user to press enter, useful for paging.
+     */
     public void waitForEnter() {
         scanner.nextLine();
     }
 
+    /**
+     * Closes the shared scanner resource.
+     */
     public void closeScanner() {
         scanner.close();
     }

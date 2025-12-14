@@ -15,13 +15,21 @@ import org.junit.platform.engine.TestExecutionResult;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 
+/**
+ * Entry point for the console-based Bank Account Management application.
+ * Drives the interactive menus, coordinates persistence, and exposes a test harness.
+ */
 public class Main {
     private static final InputHandler inputHandler = new InputHandler();
-    private static final AccountManager accountManager = new AccountManager(inputHandler);
-    private static final TransactionManager transactionManager = new TransactionManager();
+    private static final TransactionManager transactionManager = new TransactionManager(inputHandler);
+    private static final AccountManager accountManager = new AccountManager(inputHandler, transactionManager);
 
+    /**
+     * Launches the CLI loop, routing each menu option until the user chooses to exit.
+     * All persisted data is initialized before the loop begins and saved on exit.
+     */
     public static void main(String[] args) {
-        accountManager.generateSeedAccounts(transactionManager);
+        accountManager.initializeData();
         boolean exit = false;
         while (!exit) {
             printMainMenu();
@@ -37,12 +45,16 @@ public class Main {
                     generateAccountStatements();
                     break;
                 case 4:
-                    runTests();
+                    handlePersistenceMenu();
                     break;
                 case 5:
+                    runTests();
+                    break;
+                case 6:
                     exit = true;
+                    accountManager.saveAllData();
                     System.out.println(
-                            "\nThank you for using the Bank Account Management System!\nAll data saved in memory. Remember to commit your latest changest to Git!\nGoodbye!");
+                            "\nThank you for using the Bank Account Management System!\nData saved to disk. Remember to commit your latest changes to Git!\nGoodbye!");
                     break;
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -51,6 +63,10 @@ public class Main {
         inputHandler.closeScanner();
     }
 
+    /**
+     * Handles the Manage Accounts submenu, allowing users to create accounts,
+     * view listings, and inspect transaction history until they return to the main menu.
+     */
     private static void manageAccountsMenu() {
         boolean backToMain = false;
         while (!backToMain) {
@@ -79,15 +95,23 @@ public class Main {
         }
     }
 
+    /**
+     * Prints the top-level navigation menu for the application.
+     */
     private static void printMainMenu() {
         System.out.println("\n=== Bank Account Management System ===");
         System.out.println("1. Manage Accounts");
         System.out.println("2. Perform Transactions");
         System.out.println("3. Generate Account Statements");
-        System.out.println("4. Run tests");
-        System.out.println("5. Exit");
+        System.out.println("4. Save/Load Data");
+        System.out.println("5. Run tests");
+        System.out.println("6. Exit");
     }
 
+    /**
+     * Prompts the user for customer and account details, creates the account,
+     * and seeds an initial deposit transaction to reflect the opening balance.
+     */
     private static void createAccount() {
         System.out.println("\n--- Create New Account ---");
         System.out.println("Select Customer Type:");
@@ -128,6 +152,12 @@ public class Main {
         transactionManager.addTransaction(txn);
     }
 
+    /**
+     * Shows a confirmation dialog for a prepared transaction.
+     *
+     * @param txn transaction preview to display to the user
+     * @return {@code true} if the user confirms; {@code false} otherwise
+     */
     private static boolean showTransactionConfirmationPrompt(Transaction txn) {
         System.out.println("\nTRANSACTION CONFIRMATION");
         System.out.println("________________________________");
@@ -140,6 +170,10 @@ public class Main {
         return true;
     }
 
+    /**
+     * Guides the user through deposit, withdrawal, or transfer workflows,
+     * performing validation, confirmation, and persistence.
+     */
     private static void processTransaction() {
         System.out.println("\n--- Process Transaction ---");
         Account account = inputHandler.getAccount("Enter Account Number: ", accountManager);
@@ -185,6 +219,7 @@ public class Main {
             if (success) {
                 transactionManager.addTransaction(debitTxn);
                 transactionManager.addTransaction(creditTxn);
+                accountManager.saveAllData();
                 System.out.println("Transaction recorded.");
             }
 
@@ -199,6 +234,7 @@ public class Main {
             success = account.processTransaction(amount, type);
             if (success) {
                 transactionManager.addTransaction(txn);
+                accountManager.saveAllData();
                 System.out.println("Transaction recorded.");
             }
 
@@ -213,6 +249,7 @@ public class Main {
             success = account.processTransaction(amount, type);
             if (success) {
                 transactionManager.addTransaction(txn);
+                accountManager.saveAllData();
                 System.out.println("Transaction recorded.");
             }
         }
@@ -221,6 +258,9 @@ public class Main {
         inputHandler.waitForEnter();
     }
 
+    /**
+     * Prompts for an account number and prints its transaction history.
+     */
     private static void viewTransactionHistory() {
         Account account = inputHandler.getAccount("Enter Account Number: ", accountManager);
         System.out.println();
@@ -229,6 +269,9 @@ public class Main {
         transactionManager.viewTransactionsByAccount(account.getAccountNumber());
     }
 
+    /**
+     * Prompts for an account number and generates a printable account statement.
+     */
     private static void generateAccountStatements() {
         System.out.println("\nGENERATE ACCOUNT STATEMENT");
         System.out.println("_________________________________");
@@ -236,6 +279,25 @@ public class Main {
         transactionManager.generateStatement(account);
     }
 
+    /**
+     * Offers save/load actions so the operator can manually persist or reload data.
+     */
+    private static void handlePersistenceMenu() {
+        System.out.println("\n=== Save / Load Data ===");
+        System.out.println("1. Save data now");
+        System.out.println("2. Reload data from disk");
+        System.out.println("3. Back to Main Menu");
+        int choice = inputHandler.getIntInput("Enter your choice: ", "Choice must be a number");
+        switch (choice) {
+            case 1 -> accountManager.saveAllData();
+            case 2 -> accountManager.initializeData();
+            default -> System.out.println("Returning to main menu.");
+        }
+    }
+
+    /**
+     * Executes the curated suite of unit tests and summarizes the results in the console.
+     */
     private static void runTests() {
         System.out.println("\nRunning tests with JUnit ...\n");
 
@@ -296,10 +358,15 @@ public class Main {
         inputHandler.waitForEnter();
     }
 
-    // Custom TestExecutionListener to capture and report all test results
+    /**
+     * Captures per-test results so they can be printed in the desired format after execution.
+     */
     private static class TestReportingListener implements TestExecutionListener {
         private final java.util.List<TestResult> results = new java.util.ArrayList<>();
 
+        /**
+         * Records the outcome of each individual test case for later reporting.
+         */
         @Override
         public void executionFinished(org.junit.platform.launcher.TestIdentifier testIdentifier,
                 TestExecutionResult result) {
@@ -311,6 +378,9 @@ public class Main {
             }
         }
 
+        /**
+         * Prints the collected test results, formatting each case on its own line.
+         */
         void displayResults() {
             if (results.isEmpty()) {
                 return;
@@ -321,6 +391,9 @@ public class Main {
             }
         }
 
+        /**
+         * Lightweight value object for storing a test name and its status.
+         */
         private static class TestResult {
             String testName;
             String status;

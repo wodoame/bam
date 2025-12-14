@@ -3,33 +3,51 @@ package com.bam.services;
 import com.bam.exceptions.InvalidAccountException;
 import com.bam.models.Account;
 import com.bam.models.CheckingAccount;
+import com.bam.models.Customer;
 import com.bam.models.RegularCustomer;
 import com.bam.models.SavingsAccount;
 import com.bam.models.Transaction;
 import com.bam.utils.InputHandler;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * Coordinates all account CRUD operations, persistence, and initial data seeding.
+ */
 public class AccountManager {
     private final ArrayList<Account> accounts;
     private final Map<String, Account> accountLookup;
     private final InputHandler inputHandler;
+    private final FilePersistenceService filePersistenceService;
+    private final TransactionManager transactionManager;
 
-    public AccountManager(InputHandler inputHandler) {
+    /**
+     * Creates a manager with interactive input handling and transaction coordination.
+     */
+    public AccountManager(InputHandler inputHandler, TransactionManager transactionManager) {
         this.accounts = new ArrayList<>();
         this.accountLookup = new HashMap<>();
         this.inputHandler = inputHandler;
+        this.transactionManager = transactionManager;
+        this.filePersistenceService = new FilePersistenceService();
     }
 
     // By default, this method should show success message and the customer details
+    /**
+     * Registers a newly created account and displays confirmation output.
+     */
     public void addAccount(Account account) {
         addAccount(account, false);
     }
 
+    /**
+     * Registers an account, optionally suppressing user-facing output.
+     */
     public void addAccount(Account account, boolean silent) {
         if (accountLookup.putIfAbsent(account.getAccountNumber(), account) != null) {
             throw new IllegalArgumentException(
@@ -41,9 +59,15 @@ public class AccountManager {
             account.displayAccountDetails();
             System.out.println("\nPress Enter to continue...");
             inputHandler.waitForEnter();
+            saveAllData();
         }
     }
 
+    /**
+     * Finds an account by number or throws if not present.
+     *
+     * @throws InvalidAccountException when the account does not exist
+     */
     public Account findAccount(String accountNumber) {
         Account account = accountLookup.get(accountNumber);
         if (account == null) {
@@ -52,6 +76,9 @@ public class AccountManager {
         return account;
     }
 
+    /**
+     * Prints a tabular overview of all accounts, including derived stats.
+     */
     public void viewAllAccounts() {
         System.out.println("ACCOUNT LISTING");
         final String headerFormat = "%-10s | %-20s | %-30s | %-12s | %-10s%n";
@@ -113,10 +140,16 @@ public class AccountManager {
         inputHandler.waitForEnter();
     }
 
+    /**
+     * @return aggregate balance across all accounts.
+     */
     public double getTotalBalance() {
         return accounts.stream().mapToDouble(Account::getBalance).sum();
     }
 
+    /**
+     * Seeds sample accounts and matching transactions for demo purposes.
+     */
     public void generateSeedAccounts(TransactionManager transactionManager) {
         String[] names = {"Bernard", "Alice", "John", "Diana", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack"};
         Random random = new Random();
@@ -148,11 +181,106 @@ public class AccountManager {
         }
     }
 
+    /** @return live count of managed accounts. */
     public int getAccountCount() {
         return accounts.size();
     }
 
+    /** @return defensive copy of the current accounts list. */
     public ArrayList<Account> getAccountsSnapshot() {
         return new ArrayList<>(accounts);
+    }
+
+    /**
+     * Attempts to load account and transaction data from disk, falling back to seed data.
+     */
+    public void loadPersistedData(TransactionManager transactionManager) {
+        try {
+            var loadedAccounts = filePersistenceService.loadAccounts();
+            var loadedTransactions = filePersistenceService.loadTransactions();
+            accounts.clear();
+            accountLookup.clear();
+            loadedAccounts.forEach(account -> {
+                accounts.add(account);
+                accountLookup.put(account.getAccountNumber(), account);
+            });
+            TransactionManager.seedTransactions(loadedTransactions);
+            syncCounters();
+            if (accounts.isEmpty()) {
+                System.out.println("No persisted accounts found. Generating seed data...");
+                generateSeedAccounts(transactionManager);
+            } else {
+                System.out.printf("Loaded %d accounts and %d transactions from disk.%n", accounts.size(), loadedTransactions.size());
+            }
+        } catch (IOException e) {
+            System.out.println("Failed to load persisted data: " + e.getMessage());
+            System.out.println("Generating default seed data instead.");
+            generateSeedAccounts(transactionManager);
+        }
+    }
+
+    /**
+     * Initializes data at startup, preferring persisted state and seeding otherwise.
+     */
+    public void initializeData() {
+        if (!loadPersistedData()) {
+            generateSeedAccounts(transactionManager);
+            saveAllData();
+        }
+    }
+
+    private boolean loadPersistedData() {
+        try {
+            var loadedAccounts = filePersistenceService.loadAccounts();
+            var loadedTransactions = filePersistenceService.loadTransactions();
+            accounts.clear();
+            accountLookup.clear();
+            loadedAccounts.forEach(account -> {
+                accounts.add(account);
+                accountLookup.put(account.getAccountNumber(), account);
+            });
+            TransactionManager.seedTransactions(loadedTransactions);
+            syncCounters();
+            if (accounts.isEmpty()) {
+                return false;
+            }
+            System.out.printf("Loaded %d accounts and %d transactions from disk.%n", accounts.size(), loadedTransactions.size());
+            return true;
+        } catch (IOException e) {
+            System.out.println("Failed to load persisted data: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private void syncCounters() {
+        int maxAccount = accounts.stream()
+                .map(Account::getAccountNumber)
+                .map(str -> str.replace("ACC", ""))
+                .mapToInt(Integer::parseInt)
+                .max()
+                .orElse(0);
+        Account.setAccountCounter(maxAccount + 1);
+
+        int maxCustomer = accounts.stream()
+                .map(Account::getCustomer)
+                .map(Customer::getCustomerId)
+                .map(id -> id.replace("CUST", ""))
+                .mapToInt(Integer::parseInt)
+                .max()
+                .orElse(0);
+        Customer.setCustomerCounter(maxCustomer + 1);
+    }
+
+    /**
+     * Saves current accounts and transactions to disk.
+     */
+    public void saveAllData() {
+        try {
+            filePersistenceService.saveAccounts(accounts);
+            filePersistenceService.saveTransactions(TransactionManager.allTransactions());
+            System.out.println("Data saved successfully.");
+        } catch (IOException e) {
+            System.out.println("Failed to save data: " + e.getMessage());
+        }
     }
 }

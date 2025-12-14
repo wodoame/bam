@@ -1,12 +1,26 @@
 package com.bam.models;
 
+/**
+ * Premium tier customer with waived fees and priority perks.
+ */
 public class PremiumCustomer extends Customer {
     private final double minimumBalanceRequirement = 10000.0;
 
+    /**
+     * Creates a premium customer, auto-generating an ID.
+     */
     public PremiumCustomer(String name, int age, String contact, String address) {
         super(name, age, contact, address);
     }
 
+    /**
+     * Rehydrates a premium customer from persisted state.
+     */
+    public PremiumCustomer(String name, int age, String contact, String address, String customerId) {
+        super(name, age, contact, address, customerId);
+    }
+
+    /** {@inheritDoc} */
     @Override
     public void displayCustomerDetails() {
         System.out.println("Customer ID: " + customerId);
@@ -17,11 +31,15 @@ public class PremiumCustomer extends Customer {
         System.out.println("Benefits: No monthly fees, Priority service");
     }
 
+    /** {@inheritDoc} */
     @Override
     public String getCustomerType() {
         return "Premium";
     }
 
+    /**
+     * Indicates whether this customer qualifies for waived fees.
+     */
     public boolean hasWaivedFees() {
         return true;
     }
