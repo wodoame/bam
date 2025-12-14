@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
  */
 public class TransactionManager {
     private  static final Map<String, List<Transaction>> transactionsMap = new HashMap<>();
+    private static final Map<String, Integer> transactionCounters = new HashMap<>();
+    private static final Object ledgerLock = new Object();
     private final InputHandler inputHandler;
 
     /**
@@ -34,36 +36,52 @@ public class TransactionManager {
      * Reloads all transactions from persistence, replacing any in-memory state.
      */
     public void reloadTransactions(List<Transaction> persistedTransactions) {
-        transactionsMap.clear();
-        persistedTransactions.forEach(txn ->
-                transactionsMap.computeIfAbsent(txn.getAccountNumber(), key -> new ArrayList<>()).add(txn)
-        );
+        synchronized (ledgerLock) {
+            transactionsMap.clear();
+            transactionCounters.clear();
+            persistedTransactions.forEach(txn -> {
+                transactionsMap.computeIfAbsent(txn.getAccountNumber(), key -> new ArrayList<>()).add(txn);
+                updateCounter(txn);
+            });
+        }
     }
 
     /**
      * Snapshot of every transaction across accounts.
      */
     public List<Transaction> snapshotAllTransactions() {
-        return transactionsMap.values().stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
+        synchronized (ledgerLock) {
+            return transactionsMap.values().stream()
+                    .flatMap(List::stream)
+                    .map(TransactionManager::cloneTransaction)
+                    .collect(Collectors.toList());
+        }
     }
 
     /**
      * Seeds the static map for scenarios without a TransactionManager instance.
      */
     public static void seedTransactions(List<Transaction> transactions) {
-        transactionsMap.clear();
-        transactions.forEach(txn ->
-                transactionsMap.computeIfAbsent(txn.getAccountNumber(), key -> new ArrayList<>()).add(txn)
-        );
+        synchronized (ledgerLock) {
+            transactionsMap.clear();
+            transactionCounters.clear();
+            transactions.forEach(txn -> {
+                transactionsMap.computeIfAbsent(txn.getAccountNumber(), key -> new ArrayList<>()).add(txn);
+                updateCounter(txn);
+            });
+        }
     }
 
     /**
      * @return view of all transactions currently tracked.
      */
     public static List<Transaction> allTransactions() {
-        return transactionsMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
+        synchronized (ledgerLock) {
+            return transactionsMap.values().stream()
+                    .flatMap(List::stream)
+                    .map(TransactionManager::cloneTransaction)
+                    .collect(Collectors.toList());
+        }
     }
 
     /**
@@ -91,10 +109,12 @@ public class TransactionManager {
      * Adds a transaction and ensures it has a generated ID.
      */
     public void addTransaction(Transaction transaction) {
-        transactionsMap
-                .computeIfAbsent(transaction.getAccountNumber(), key -> new ArrayList<>())
-                .add(transaction);
-        transaction.generateTransactionId(); // IMPORTANT
+        synchronized (ledgerLock) {
+            transactionsMap
+                    .computeIfAbsent(transaction.getAccountNumber(), key -> new ArrayList<>())
+                    .add(transaction);
+            generateTransactionId(transaction);
+        }
     }
 
     /**
@@ -275,5 +295,30 @@ public class TransactionManager {
         boolean isCredit = txn.getType().equalsIgnoreCase("deposit") || txn.getType().equalsIgnoreCase("transfer in");
         String sign = isCredit ? "+" : "-";
         return String.format("%s$%.2f", sign, txn.getAmount());
+    }
+
+    private static void generateTransactionId(Transaction transaction) {
+        String accountNumber = transaction.getAccountNumber();
+        int nextId = transactionCounters.merge(accountNumber, 1, Integer::sum);
+        transaction.setTransactionId(String.format("TXN%03d", nextId));
+    }
+
+    private static void updateCounter(Transaction transaction) {
+        String accountNumber = transaction.getAccountNumber();
+        if (transaction.getTransactionId() == null) {
+            return;
+        }
+        try {
+            int existing = Integer.parseInt(transaction.getTransactionId().replace("TXN", ""));
+            transactionCounters.merge(accountNumber, existing, Math::max);
+        } catch (NumberFormatException ignored) {
+        }
+    }
+
+    private static Transaction cloneTransaction(Transaction txn) {
+        Transaction clone = new Transaction(txn.getTransactionId(), txn.getAccountNumber(), txn.getType(), txn.getAmount(), txn.getBalanceAfter(), txn.getTimestamp());
+        clone.setTransactionId(txn.getTransactionId());
+        clone.setTimestamp(txn.getTimestamp());
+        return clone;
     }
 }
