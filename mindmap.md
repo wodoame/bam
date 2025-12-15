@@ -85,3 +85,9 @@ Confirm transaction? (Y/N):
 5. Test scenario 4, 6, 7
 6. `transfer` method is needed
 7. Create a balance formatter to handle savings and checking account balance display
+
+`AccountManager.getAccountsSnapshot()`
+intentionally returns `new ArrayList<>(accounts)` as a defensive copy.
+If it exposed the internal accounts list directly, 
+any caller—such as the concurrent simulation you just added—could add/remove/clear entries and 
+corrupt the manager’s internal state, breaking invariants (unique account numbers, persisted order, etc.). By cloning the list, callers can iterate or even reorder locally without risking shared mutations. This pattern becomes even more important once threads are involved; each thread works on its own snapshot while the manager keeps sole authority over the canonical list.

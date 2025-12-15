@@ -14,6 +14,9 @@ import org.junit.platform.launcher.listeners.TestExecutionSummary;
 import org.junit.platform.engine.TestExecutionResult;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Entry point for the console-based Bank Account Management application.
@@ -51,6 +54,9 @@ public class Main {
                     runTests();
                     break;
                 case 6:
+                    runConcurrentSimulation();
+                    break;
+                case 7:
                     exit = true;
                     accountManager.saveAllData();
                     System.out.println(
@@ -105,7 +111,8 @@ public class Main {
         System.out.println("3. Generate Account Statements");
         System.out.println("4. Save/Load Data");
         System.out.println("5. Run tests");
-        System.out.println("6. Exit");
+        System.out.println("6. Run Concurrent Simulation");
+        System.out.println("7. Exit");
     }
 
     /**
@@ -357,6 +364,114 @@ public class Main {
 
         System.out.println("\nPress Enter to continue...");
         inputHandler.waitForEnter();
+    }
+
+    /**
+     * Placeholder for future concurrent simulation logic.
+     */
+    private static void runConcurrentSimulation() {
+        System.out.println("\n=== Concurrent Transaction Simulation ===");
+        var accounts = accountManager.getAccountsSnapshot();
+        if (accounts.isEmpty()) {
+            System.out.println("No accounts available. Create or load accounts before running the simulation.");
+            System.out.println("Press Enter to return to the menu...");
+            inputHandler.waitForEnter();
+            return;
+        }
+
+        Account primaryAccount = accounts.get(0);
+        Account secondaryAccount = accounts.size() > 1 ? accounts.get(1) : null;
+        System.out.printf("Running with %s (%s).%n", primaryAccount.getAccountNumber(),
+                primaryAccount.getCustomer().getName());
+        if (secondaryAccount == null) {
+            System.out.println("Only one account available; simulation will focus on that account.");
+        } else {
+            System.out.printf("Secondary account: %s (%s).%n", secondaryAccount.getAccountNumber(),
+                    secondaryAccount.getCustomer().getName());
+        }
+
+        Object consoleLock = new Object();
+        List<Thread> workers = new ArrayList<>();
+        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", consoleLock, 5), "P-Deposit-1"));
+        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Withdrawal", consoleLock, 5), "P-Withdraw-1"));
+        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", consoleLock, 5), "P-Deposit-2"));
+        if (secondaryAccount != null) {
+            workers.add(new Thread(() -> simulateTransactions(secondaryAccount, "Withdrawal", consoleLock, 5),
+                    "S-Withdraw-1"));
+            workers.add(new Thread(() -> simulateTransactions(secondaryAccount, "Deposit", consoleLock, 5),
+                    "S-Deposit-1"));
+        }
+
+        workers.forEach(Thread::start);
+        for (Thread worker : workers) {
+            try {
+                worker.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.out.println("Simulation interrupted.");
+                return;
+            }
+        }
+
+        if (secondaryAccount != null) {
+            System.out.println("\nOptional parallel-stream batch demo...");
+            List<Runnable> batchTasks = List.of(
+                    () -> runBatchTask(primaryAccount, "Deposit", 125.00, consoleLock),
+                    () -> runBatchTask(primaryAccount, "Withdrawal", 60.00, consoleLock),
+                    () -> runBatchTask(secondaryAccount, "Deposit", 85.00, consoleLock),
+                    () -> runBatchTask(secondaryAccount, "Withdrawal", 40.00, consoleLock));
+            batchTasks.parallelStream().forEach(Runnable::run);
+        }
+
+        System.out.println("\nFinal balances after simulation:");
+        System.out.printf("%s -> $%.2f%n", primaryAccount.getAccountNumber(), primaryAccount.getBalance());
+        if (secondaryAccount != null) {
+            System.out.printf("%s -> $%.2f%n", secondaryAccount.getAccountNumber(), secondaryAccount.getBalance());
+        }
+        System.out.println("Press Enter to return to the menu...");
+        inputHandler.waitForEnter();
+    }
+
+    private static void simulateTransactions(Account account, String type, Object consoleLock, int iterations) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        for (int i = 0; i < iterations; i++) {
+            double min = type.equalsIgnoreCase("Deposit") ? 25.0 : 15.0;
+            double max = type.equalsIgnoreCase("Deposit") ? 200.0 : 120.0;
+            double amount = Math.round(random.nextDouble(min, max) * 100.0) / 100.0;
+            boolean success = account.processTransaction(amount, type);
+            double balance = account.getBalance();
+            synchronized (consoleLock) {
+                String verb = type.equalsIgnoreCase("Deposit") ? "deposited" : "withdrew";
+                System.out.printf("[%s] %s %s $%.2f -> balance $%.2f (%s)%n",
+                        Thread.currentThread().getName(),
+                        account.getAccountNumber(),
+                        verb,
+                        amount,
+                        balance,
+                        success ? "ok" : "rejected");
+            }
+            try {
+                Thread.sleep(random.nextInt(40, 120));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
+    private static void runBatchTask(Account account, String type, double amount, Object consoleLock) {
+        boolean success = account.processTransaction(amount, type);
+        double balance = account.getBalance();
+        synchronized (consoleLock) {
+            String verb = type.equalsIgnoreCase("Deposit") ? "deposited" : "withdrew";
+            System.out.printf("[parallel-%s] %s %s $%.2f -> balance $%.2f (%s)%n",
+                    Thread.currentThread().getName(),
+                    account.getAccountNumber(),
+                    verb,
+                    amount,
+                    balance,
+                    success ? "ok" : "rejected");
+        }
     }
 
     /**
