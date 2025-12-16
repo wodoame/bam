@@ -438,8 +438,18 @@ public class Main {
             double min = type.equalsIgnoreCase("Deposit") ? 25.0 : 15.0;
             double max = type.equalsIgnoreCase("Deposit") ? 200.0 : 120.0;
             double amount = Math.round(random.nextDouble(min, max) * 100.0) / 100.0;
-            boolean success = account.processTransaction(amount, type);
-            double balance = account.getBalance();
+
+            // Synchronize to ensure we get the balance immediately after the transaction
+            boolean success;
+            double balance;
+            synchronized (account) {
+                success = account.processTransaction(amount, type);
+                balance = account.getBalance();
+                // While processTransaction() and getBalance() are individually thread-safe,
+                // there's a race condition between these two method calls
+                // another thread could modify the balance after processTransaction() but before getBalance().
+            }
+
             synchronized (consoleLock) {
                 String verb = type.equalsIgnoreCase("Deposit") ? "deposited" : "withdrew";
                 System.out.printf("[%s] %s %s $%.2f -> balance $%.2f (%s)%n",
@@ -460,8 +470,14 @@ public class Main {
     }
 
     private static void runBatchTask(Account account, String type, double amount, Object consoleLock) {
-        boolean success = account.processTransaction(amount, type);
-        double balance = account.getBalance();
+        // Synchronize to ensure we get the balance immediately after the transaction
+        boolean success;
+        double balance;
+        synchronized (account) {
+            success = account.processTransaction(amount, type);
+            balance = account.getBalance();
+        }
+
         synchronized (consoleLock) {
             String verb = type.equalsIgnoreCase("Deposit") ? "deposited" : "withdrew";
             System.out.printf("[parallel-%s] %s %s $%.2f -> balance $%.2f (%s)%n",
