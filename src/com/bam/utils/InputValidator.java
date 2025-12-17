@@ -5,10 +5,16 @@ import com.bam.models.Account;
 import com.bam.models.CheckingAccount;
 import com.bam.models.SavingsAccount;
 
+import java.util.regex.Pattern;
+
 /**
  * Performs reusable validation for user inputs across the CLI.
  */
 public class InputValidator {
+    private static final Pattern ACCOUNT_NUMBER_PATTERN = Pattern.compile("ACC\\d{3}");
+    private static final Pattern CONTACT_PATTERN = Pattern.compile("\\d{10}");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+._%-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+
     /** Ensures the applicant is at least 18 years old. */
     public void validateAge(int age) {
         if (age < 18) {
@@ -28,8 +34,14 @@ public class InputValidator {
 
     /** Requires a 10-digit numeric contact number. */
     public void validateContact(String contact) {
-        if (!contact.matches("\\d{10}")) {
+        if (!CONTACT_PATTERN.matcher(contact).matches()) {
             throw new InvalidContactException("Contact number must be exactly 10 digits.");
+        }
+    }
+
+    public void validateEmail(String email) {
+        if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
+            throw new InvalidEmailException("Invalid email format. Example: user@example.com");
         }
     }
 
@@ -106,6 +118,13 @@ public class InputValidator {
                         "You do not have sufficient funds ($%.2f + $%.2f overdraft limit) to perform this transaction",
                         account.getBalance(), CheckingAccount.OVERDRAFT_LIMIT));
             }
+        }
+    }
+
+    /** Validates the format of account numbers. */
+    public void validateAccountNumberFormat(String accountNumber) {
+        if (accountNumber == null || !ACCOUNT_NUMBER_PATTERN.matcher(accountNumber).matches()) {
+            throw new InvalidAccountNumberException("Account number must match ACC followed by three digits (e.g., ACC123).");
         }
     }
 }

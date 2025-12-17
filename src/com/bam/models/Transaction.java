@@ -90,13 +90,20 @@ public class Transaction {
     }
 
     /**
+     * Exposes the generated-flag so clone operations can copy state safely.
+     */
+    public boolean isIdGenerated() {
+        return idGenerated;
+    }
+
+    /**
      * Updates the timestamp for reloaded entries.
      */
     public void setTimestamp(Date timestamp) {
-        if (timestamp != null) {
-            this.timestamp = timestamp;
-        }
-    }
+         if (timestamp != null) {
+             this.timestamp = timestamp;
+         }
+     }
 
     /**
      * Prints a human-readable breakdown of the transaction for CLI confirmation dialogs.

@@ -1,6 +1,7 @@
 package com.bam.services;
 
 import com.bam.models.*;
+import com.bam.utils.InputValidator;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +29,7 @@ public class FilePersistenceService {
     private final Path dataDirectory;
     private final Path accountsPath;
     private final Path transactionsPath;
+    private final InputValidator validator = new InputValidator();
 
     public FilePersistenceService() {
         this.dataDirectory = Path.of(DATA_DIR);
@@ -103,7 +105,7 @@ public class FilePersistenceService {
      */
     private Account parseAccount(String line) {
         String[] parts = line.split("\\|", -1);
-        if (parts.length < 11) {
+        if (parts.length < 12) {
             throw new IllegalArgumentException("Invalid account entry: " + line);
         }
         String accountNumber = parts[0];
@@ -111,6 +113,10 @@ public class FilePersistenceService {
         double balance = Double.parseDouble(parts[2]);
         String status = parts[3];
         Customer customer = getCustomer(parts);
+
+        validator.validateAccountNumberFormat(accountNumber);
+        validator.validateContact(customer.getContact());
+        validator.validateEmail(customer.getEmail());
 
         return switch (accountType.toLowerCase()) {
             case "savings" -> new SavingsAccount(customer, balance, accountNumber, status);
@@ -125,11 +131,12 @@ public class FilePersistenceService {
         String name = parts[6];
         int age = Integer.parseInt(parts[7]);
         String contact = parts[8];
-        String address = parts[9];
+        String email = parts[9];
+        String address = parts[10];
 
         return customerType.equalsIgnoreCase("Premium")
-                ? new PremiumCustomer(name, age, contact, address, customerId)
-                : new RegularCustomer(name, age, contact, address, customerId);
+                ? new PremiumCustomer(name, age, contact, email, address, customerId)
+                : new RegularCustomer(name, age, contact, email, address, customerId);
     }
 
     /**
@@ -150,6 +157,7 @@ public class FilePersistenceService {
                 sanitize(customer.getName()),
                 String.valueOf(customer.getAge()),
                 customer.getContact(),
+                sanitize(customer.getEmail()),
                 sanitize(customer.getAddress()),
                 String.valueOf(extra));
     }

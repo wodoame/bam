@@ -8,15 +8,15 @@ public class RegularCustomer extends Customer {
     /**
      * Constructs a new regular customer using generated ID.
      */
-    public RegularCustomer(String name, int age, String contact, String address) {
-        super(name, age, contact, address);
+    public RegularCustomer(String name, int age, String contact, String email, String address) {
+        super(name, age, contact, email, address);
     }
 
     /**
      * Rehydrates a persisted regular customer record.
      */
-    public RegularCustomer(String name, int age, String contact, String address, String customerId) {
-        super(name, age, contact, address, customerId);
+    public RegularCustomer(String name, int age, String contact, String email, String address, String customerId) {
+        super(name, age, contact, email, address, customerId);
     }
 
     /** {@inheritDoc} */
@@ -26,6 +26,7 @@ public class RegularCustomer extends Customer {
         System.out.println("Name: " + name);
         System.out.println("Type: " + getCustomerType());
         System.out.println("Contact: " + contact);
+        System.out.println("Email: " + email);
         System.out.println("Address: " + address);
     }
 

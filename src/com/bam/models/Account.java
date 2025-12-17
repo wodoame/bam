@@ -15,9 +15,10 @@ import com.bam.utils.InputValidator;
 public abstract class Account implements Transactable {
     protected String accountNumber;
     protected Customer customer;
-    protected double balance;
+    protected volatile double balance;
     protected String status;
     protected static int accountCounter = 1;
+    private final Object balanceLock = new Object();
 
     /**
      * Creates a new account with a freshly generated account number.
@@ -76,8 +77,10 @@ public abstract class Account implements Transactable {
     public boolean deposit(double amount) {
         InputValidator validator = new InputValidator();
         validator.validateDepositAmount(amount);
-        balance += amount;
-        return true;
+        synchronized (balanceLock) {
+            balance += amount;
+            return true;
+        }
     }
 
     /**
@@ -88,9 +91,11 @@ public abstract class Account implements Transactable {
      */
     public boolean withdraw(double amount) {
         InputValidator validator = new InputValidator();
-        validator.validateWithdrawalAmount(amount, this);
-        balance -= amount;
-        return true;
+        synchronized (balanceLock) {
+            validator.validateWithdrawalAmount(amount, this);
+            balance -= amount;
+            return true;
+        }
     };
 
     /**
@@ -106,15 +111,20 @@ public abstract class Account implements Transactable {
         if (this == targetAccount) {
             throw new InvalidAccountException("Cannot transfer to the same account");
         }
-
-        // Withdraw from this account first
-        // If this fails (e.g. insufficiency funds), it will throw an exception
-        // and the transfer will be aborted, which is what we want.
-        this.withdraw(amount);
-
-        // Then deposit to target account
-        targetAccount.deposit(amount);
-        System.out.printf("Transferred $%.2f to %s\n", amount, targetAccount.getAccountNumber());
+        Object firstLock = this.balanceLock;
+        Object secondLock = targetAccount.balanceLock;
+        if (System.identityHashCode(firstLock) > System.identityHashCode(secondLock)) {
+            Object temp = firstLock;
+            firstLock = secondLock;
+            secondLock = temp;
+        }
+        synchronized (firstLock) {
+            synchronized (secondLock) {
+                this.withdraw(amount);
+                targetAccount.deposit(amount);
+                System.out.printf("Transferred $%.2f to %s\n", amount, targetAccount.getAccountNumber());
+            }
+        }
     }
 
     /** @return unique account number. */
@@ -129,7 +139,9 @@ public abstract class Account implements Transactable {
 
     /** @return current cash balance. */
     public double getBalance() {
-        return balance;
+        synchronized (balanceLock) {
+            return balance;
+        }
     }
 
     /** @return lifecycle status string. */
