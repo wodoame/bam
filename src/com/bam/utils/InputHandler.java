@@ -218,8 +218,8 @@ public class InputHandler {
      */
     public int getTransactionSortDirectionChoice() {
         System.out.println("Select sort order:");
-        System.out.println("1. Ascending");
-        System.out.println("2. Descending");
+        System.out.println("1. Ascending (oldest first for time-based sorting)");
+        System.out.println("2. Descending (latest first for time-based sorting)");
         while (true) {
             int choice = getIntInput("Enter choice (1-2): ", "Choice must be a number");
             try {
@@ -257,7 +257,8 @@ public class InputHandler {
         while (true) {
             amount = getDoubleInput(prompt, "Amount must be a number");
             try{
-                validator.validateWithdrawalAmount(amount, account);
+                if(account.getAccountType().equalsIgnoreCase("savings")) validator.validateSavingsWithdrawal(amount, account.getBalance());
+                else validator.validateCheckingWithdrawal(amount, account.getBalance());
                 break; // Valid input, exit loop
             }
             catch(InsufficientFundsException | InvalidWithdrawalAmountException | OverdraftExceededException e){

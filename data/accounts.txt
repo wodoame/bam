@@ -9,3 +9,5 @@ ACC008|Savings|1561.6202533586966|Active|Regular|CUST008|Hank|30|0123456789|hank
 ACC009|Checking|1798.5437525575123|Active|Regular|CUST009|Ivy|30|0123456789|ivy@example.com|Accra, Ghana|1000.0
 ACC010|Checking|528.4969278722428|Active|Regular|CUST010|Jack|30|0123456789|jack@example.com|Accra, Ghana|1000.0
 ACC011|Savings|500.0|Active|Regular|CUST011|Bernard|22|3333333333|bmwodoame@gmail.com|Accra.com|3.5
+ACC012|Savings|500.0|Active|Regular|CUST012|Random Person|22|2222222222|randomperson@gmail.com|Tse Addo|3.5
+ACC013|Savings|700.0|Active|Regular|CUST013|Cardi B|33|7777777777|cardib.real@yahoo.com|Some|3.5

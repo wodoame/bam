@@ -1,7 +1,6 @@
 package com.bam.utils;
 
 import com.bam.exceptions.*;
-import com.bam.models.Account;
 import com.bam.models.CheckingAccount;
 import com.bam.models.SavingsAccount;
 
@@ -41,7 +40,7 @@ public class InputValidator {
 
     public void validateEmail(String email) {
         if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
-            throw new InvalidEmailException("Invalid email format. Example: user@example.com");
+            throw new InvalidEmailException("Invalid email format. Please enter a valid address (e.g, name@example.com)");
         }
     }
 
@@ -97,27 +96,30 @@ public class InputValidator {
         }
     }
 
-    /** Validates withdrawal limits based on account type and overdraft rules. */
-    public void validateWithdrawalAmount(double amount, Account account) {
+    /** Validates withdrawal limits for savings accounts, enforcing minimum balance. */
+    public void validateSavingsWithdrawal(double amount, double currentBalance) {
         if (amount <= 0) {
             throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");
         }
 
-        if (account.getAccountType().equalsIgnoreCase("savings")) {
-            if (account.getBalance() - amount < SavingsAccount.MINIMUM_BALANCE) {
-                throw new InsufficientFundsException(String.format(
-                        "You do not have sufficient funds (%.2f) to perform this transaction\n" +
-                                "You need a minimum balance of $%.2f in your account",
-                        account.getBalance(), SavingsAccount.MINIMUM_BALANCE));
-            }
+        if (currentBalance - amount < SavingsAccount.MINIMUM_BALANCE) {
+            throw new InsufficientFundsException(String.format(
+                    "You do not have sufficient funds (%.2f) to perform this transaction\n" +
+                            "You need a minimum balance of $%.2f in your account",
+                    currentBalance, SavingsAccount.MINIMUM_BALANCE));
+        }
+    }
+
+    /** Validates withdrawal limits for checking accounts, allowing overdraft up to limit. */
+    public void validateCheckingWithdrawal(double amount, double currentBalance) {
+        if (amount <= 0) {
+            throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");
         }
 
-        if (account.getAccountType().equalsIgnoreCase("checking")) {
-            if (account.getBalance() - amount < -CheckingAccount.OVERDRAFT_LIMIT) {
-                throw new OverdraftExceededException(String.format("Overdraft limit exceeded\n" +
-                        "You do not have sufficient funds ($%.2f + $%.2f overdraft limit) to perform this transaction",
-                        account.getBalance(), CheckingAccount.OVERDRAFT_LIMIT));
-            }
+        if (currentBalance - amount < -CheckingAccount.OVERDRAFT_LIMIT) {
+            throw new OverdraftExceededException(String.format("Overdraft limit exceeded\n" +
+                    "You do not have sufficient funds ($%.2f + $%.2f overdraft limit) to perform this transaction",
+                    currentBalance, CheckingAccount.OVERDRAFT_LIMIT));
         }
     }
 

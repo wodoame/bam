@@ -164,9 +164,9 @@ public class TransactionManager {
         System.out.printf("%-25s: $%.2f%n", "Current Balance", account.getBalance());
         System.out.printf("%-25s: %s%n", "Account Status", "Active");
 
-        System.out.println("\nTransactions:");
         List<Transaction> accountTransactions = getTransactions(accountNumber);
         List<Transaction> sortedTransactions = sortTransactions(accountTransactions);
+        System.out.println("\nTransactions:");
         printTransactionsTable(sortedTransactions);
 
         // Display summary statistics
