@@ -1,5 +1,7 @@
 package com.bam.models;
 
+import com.bam.utils.InputValidator;
+
 
 /**
  * Checking account variant with overdraft support and optional monthly fees.
@@ -43,6 +45,23 @@ public class CheckingAccount extends Account {
     @Override
     public String getAccountType() {
         return "Checking";
+    }
+
+    /**
+     * Validates and withdraws funds from the checking account balance,
+     * allowing overdraft up to the configured limit.
+     *
+     * @param amount amount to subtract
+     * @return {@code true} when the withdrawal succeeds
+     */
+    @Override
+    public boolean withdraw(double amount) {
+        InputValidator validator = new InputValidator();
+        synchronized (this) {
+            validator.validateCheckingWithdrawal(amount, balance);
+            balance -= amount;
+            return true;
+        }
     }
 
     /**

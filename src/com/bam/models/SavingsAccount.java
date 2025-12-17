@@ -1,10 +1,6 @@
 package com.bam.models;
 
-import com.bam.exceptions.InvalidWithdrawalAmountException;
-import com.bam.exceptions.InsufficientFundsException;
 import com.bam.utils.InputValidator;
-
-import javax.xml.validation.Validator;
 
 /**
  * Savings account variant enforcing minimum balance and interest accrual.
@@ -49,6 +45,23 @@ public class SavingsAccount extends Account {
     @Override
     public String getAccountType() {
         return "Savings";
+    }
+
+    /**
+     * Validates and withdraws funds from the savings account balance,
+     * ensuring minimum balance requirements are met.
+     *
+     * @param amount amount to subtract
+     * @return {@code true} when the withdrawal succeeds
+     */
+    @Override
+    public boolean withdraw(double amount) {
+        InputValidator validator = new InputValidator();
+        synchronized (this) {
+            validator.validateSavingsWithdrawal(amount, balance);
+            balance -= amount;
+            return true;
+        }
     }
 
     /**

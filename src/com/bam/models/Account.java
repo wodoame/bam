@@ -1,6 +1,5 @@
 package com.bam.models;
 
-import com.bam.exceptions.InvalidDepositAmountException;
 import com.bam.exceptions.InvalidWithdrawalAmountException;
 import com.bam.exceptions.InsufficientFundsException;
 import com.bam.exceptions.OverdraftExceededException;
@@ -89,14 +88,7 @@ public abstract class Account implements Transactable {
      * @param amount amount to subtract
      * @return {@code true} when the withdrawal succeeds
      */
-    public boolean withdraw(double amount) {
-        InputValidator validator = new InputValidator();
-        synchronized (balanceLock) {
-            validator.validateWithdrawalAmount(amount, this);
-            balance -= amount;
-            return true;
-        }
-    };
+    public abstract boolean withdraw(double amount);
 
     /**
      * Transfers funds to the target account after validating both accounts.

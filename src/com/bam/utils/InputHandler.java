@@ -257,7 +257,8 @@ public class InputHandler {
         while (true) {
             amount = getDoubleInput(prompt, "Amount must be a number");
             try{
-                validator.validateWithdrawalAmount(amount, account);
+                if(account.getAccountType().equalsIgnoreCase("savings")) validator.validateSavingsWithdrawal(amount, account.getBalance());
+                else validator.validateCheckingWithdrawal(amount, account.getBalance());
                 break; // Valid input, exit loop
             }
             catch(InsufficientFundsException | InvalidWithdrawalAmountException | OverdraftExceededException e){
