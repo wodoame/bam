@@ -370,147 +370,111 @@ public class Main {
     }
 
     /**
-     * Presents a submenu for concurrent transaction simulations and executes
-     * the corresponding JUnit tests based on user selection.
+     * Runs a visual simulation showing concurrent transactions in action.
      */
     private static void runConcurrentSimulation() {
         boolean backToMain = false;
         while (!backToMain) {
             System.out.println("\n=== Concurrent Transaction Simulation ===");
-            System.out.println("1. Concurrent Deposits Test");
-            System.out.println("2. Concurrent Withdrawals Test");
-            System.out.println("3. Concurrent Deposits & Withdrawals Test");
-            System.out.println("4. Run Visual Simulation (Legacy)");
+            System.out.println("1. Run Concurrent Deposits");
+            System.out.println("2. Run Concurrent Withdrawals");
+            System.out.println("3. Run Concurrent Transfers");
+            System.out.println("4. Run Concurrent Mixed Operations (Deposits, Withdrawals, Transfers)");
             System.out.println("5. Back to Main Menu");
 
-            int choice = inputHandler.getIntInput("Enter your choice: ", "Choice must be a number");
+            int operationChoice = inputHandler.getIntInput("Enter your choice: ", "Choice must be a number");
 
-            switch (choice) {
-                case 1:
-                    runConcurrentDepositsTest();
-                    break;
-                case 2:
-                    runConcurrentWithdrawalsTest();
-                    break;
-                case 3:
-                    runConcurrentMixedTransactionsTest();
-                    break;
-                case 4:
-                    runVisualSimulation();
-                    break;
-                case 5:
-                    backToMain = true;
-                    break;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
+            if (operationChoice == 5) {
+                backToMain = true;
+                continue;
             }
+
+            if (operationChoice < 1 || operationChoice > 5) {
+                System.out.println("Invalid choice. Please try again.");
+                continue;
+            }
+
+            // Select concurrency approach
+            System.out.println("\n--- Select Concurrency Approach ---");
+            System.out.println("1. Use Thread and synchronized");
+            System.out.println("2. Use Parallel Streams");
+
+            int approachChoice = inputHandler.getIntInput("Enter your choice: ", "Choice must be a number");
+
+            if (approachChoice < 1 || approachChoice > 2) {
+                System.out.println("Invalid choice. Returning to simulation menu.");
+                continue;
+            }
+
+            // Create test accounts for simulation
+            Customer customer1 = new RegularCustomer("Alice Smith", 30, "555-0101", "alice@example.com", "123 Main St");
+            Customer customer2 = new RegularCustomer("Bob Johnson", 35, "555-0102", "bob@example.com", "456 Oak Ave");
+
+            Account primaryAccount = new CheckingAccount(customer1, 5000.0);
+            Account secondaryAccount = new SavingsAccount(customer2, 3000.0);
+
+            System.out.println("\n--- Initial Account State ---");
+            System.out.printf("Primary account: %s (%s) - Initial balance: $%.2f%n",
+                    primaryAccount.getAccountNumber(),
+                    primaryAccount.getCustomer().getName(),
+                    primaryAccount.getBalance());
+            System.out.printf("Secondary account: %s (%s) - Initial balance: $%.2f%n",
+                    secondaryAccount.getAccountNumber(),
+                    secondaryAccount.getCustomer().getName(),
+                    secondaryAccount.getBalance());
+            System.out.println("\nRunning simulation...\n");
+
+            Object consoleLock = new Object();
+
+            // Execute based on user's choices
+            if (approachChoice == 1) {
+                runWithThreadsAndSynchronized(operationChoice, primaryAccount, secondaryAccount, consoleLock);
+            } else {
+                runWithParallelStreams(operationChoice, primaryAccount, secondaryAccount, consoleLock);
+            }
+
+            System.out.println("\n✓ Thread-safe operations completed successfully");
+            System.out.println("\n--- Final Account State ---");
+            System.out.printf("Primary account: %s -> $%.2f%n", primaryAccount.getAccountNumber(), primaryAccount.getBalance());
+            System.out.printf("Secondary account: %s -> $%.2f%n", secondaryAccount.getAccountNumber(), secondaryAccount.getBalance());
+            System.out.println("\nPress Enter to continue...");
+            inputHandler.waitForEnter();
         }
     }
 
     /**
-     * Runs JUnit tests for concurrent deposit operations.
+     * Executes concurrent operations using Thread and synchronized blocks
      */
-    private static void runConcurrentDepositsTest() {
-        System.out.println("\n=== Running Concurrent Deposits Tests ===\n");
-        runSpecificTestClass("test.java.models.ConcurrentDepositsTest");
-    }
-
-    /**
-     * Runs JUnit tests for concurrent withdrawal operations.
-     */
-    private static void runConcurrentWithdrawalsTest() {
-        System.out.println("\n=== Running Concurrent Withdrawals Tests ===\n");
-        runSpecificTestClass("test.java.models.ConcurrentWithdrawalsTest");
-    }
-
-    /**
-     * Runs JUnit tests for concurrent mixed deposit and withdrawal operations.
-     */
-    private static void runConcurrentMixedTransactionsTest() {
-        System.out.println("\n=== Running Concurrent Mixed Transactions Tests ===\n");
-        runSpecificTestClass("test.java.models.ConcurrentMixedTransactionsTest");
-    }
-
-    /**
-     * Helper method to run a specific test class and display results.
-     */
-    private static void runSpecificTestClass(String testClassName) {
-        SummaryGeneratingListener summaryListener = new SummaryGeneratingListener();
-        TestReportingListener reportingListener = new TestReportingListener();
-
-        LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                .selectors(selectClass(testClassName))
-                .build();
-
-        Launcher launcher = LauncherFactory.create();
-        launcher.registerTestExecutionListeners(summaryListener, reportingListener);
-        launcher.execute(request);
-
-        TestExecutionSummary summary = summaryListener.getSummary();
-        reportingListener.displayResults();
-
-        System.out.println("\n--- Summary ---");
-        System.out.println("Tests Found:      " + summary.getTestsFoundCount());
-        System.out.println("Tests Started:    " + summary.getTestsStartedCount());
-        System.out.println("Tests Succeeded:  " + summary.getTestsSucceededCount());
-        System.out.println("Tests Failed:     " + summary.getTestsFailedCount());
-        System.out.println("Tests Skipped:    " + summary.getTestsSkippedCount());
-        System.out.println("Tests Aborted:    " + summary.getTestsAbortedCount());
-
-        if (!summary.getFailures().isEmpty()) {
-            System.out.println("\n--- Failure Details ---");
-            summary.getFailures().forEach(failure -> {
-                System.out.println("\n✗ " + failure.getTestIdentifier().getDisplayName());
-                System.out.println("  " + failure.getException().getMessage());
-            });
-        }
-
-        System.out.println();
-        if (summary.getTestsFailedCount() == 0 && summary.getTestsAbortedCount() == 0
-                && summary.getTestsFoundCount() > 0) {
-            System.out.printf("✓ All %d tests passed!%n", summary.getTestsFoundCount());
-        } else if (summary.getTestsFailedCount() > 0 || summary.getTestsAbortedCount() > 0) {
-            System.out.println("✗ Some tests failed.");
-        } else {
-            System.out.println("No tests were executed.");
-        }
-
-        System.out.println("\nPress Enter to continue...");
-        inputHandler.waitForEnter();
-    }
-
-    /**
-     * Runs a visual simulation showing concurrent transactions in action.
-     */
-    private static void runVisualSimulation() {
-        System.out.println("Running concurrent transaction simulation...");
-
-        // Create deterministic test accounts for simulation
-        Customer customer1 = new RegularCustomer("Alice Smith", 30, "555-0101", "alice@example.com", "123 Main St");
-        Customer customer2 = new RegularCustomer("Bob Johnson", 35, "555-0102", "bob@example.com", "456 Oak Ave");
-
-        Account primaryAccount = new CheckingAccount(customer1, 5000.0);
-        Account secondaryAccount = new SavingsAccount(customer2, 3000.0);
-
-        System.out.printf("Primary account: %s (%s) - Initial balance: $%.2f%n",
-                primaryAccount.getAccountNumber(),
-                primaryAccount.getCustomer().getName(),
-                primaryAccount.getBalance());
-        System.out.printf("Secondary account: %s (%s) - Initial balance: $%.2f%n",
-                secondaryAccount.getAccountNumber(),
-                secondaryAccount.getCustomer().getName(),
-                secondaryAccount.getBalance());
-        System.out.println();
-
-        Object consoleLock = new Object();
+    private static void runWithThreadsAndSynchronized(int operationChoice, Account primaryAccount,
+                                                      Account secondaryAccount, Object consoleLock) {
         List<Thread> workers = new ArrayList<>();
-        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", consoleLock, 5), "Thread-1"));
-        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Withdrawal", consoleLock, 5), "Thread-2"));
-        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", consoleLock, 5), "Thread-3"));
-        workers.add(new Thread(() -> simulateTransactions(secondaryAccount, "Withdrawal", consoleLock, 5),
-                "Thread-4"));
-        workers.add(new Thread(() -> simulateTransactions(secondaryAccount, "Deposit", consoleLock, 5),
-                "Thread-5"));
+        int iterations = 1;
+
+        switch (operationChoice) {
+            case 1: // Concurrent Deposits
+                workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", null, consoleLock, iterations), "Thread-1"));
+                workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", null, consoleLock, iterations), "Thread-2"));
+                workers.add(new Thread(() -> simulateTransactions(secondaryAccount, "Deposit", null, consoleLock, iterations), "Thread-3"));
+                break;
+
+            case 2: // Concurrent Withdrawals
+                workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Withdrawal", null, consoleLock, iterations), "Thread-1"));
+                workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Withdrawal", null, consoleLock, iterations), "Thread-2"));
+                workers.add(new Thread(() -> simulateTransactions(secondaryAccount, "Withdrawal", null, consoleLock, iterations), "Thread-3"));
+                break;
+
+            case 3: // Concurrent Transfers
+                workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Transfer", secondaryAccount, consoleLock, iterations), "Thread-1"));
+                workers.add(new Thread(() -> simulateTransactions(secondaryAccount, "Transfer", primaryAccount, consoleLock, iterations), "Thread-2"));
+                workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Transfer", secondaryAccount, consoleLock, iterations), "Thread-3"));
+                break;
+
+            case 4: // Mixed Operations
+                workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", null, consoleLock, iterations), "Thread-1"));
+                workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Withdrawal", null, consoleLock, iterations), "Thread-2"));
+                workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Transfer", secondaryAccount, consoleLock, iterations), "Thread-3"));
+                break;
+        }
 
         workers.forEach(Thread::start);
         for (Thread worker : workers) {
@@ -522,24 +486,46 @@ public class Main {
                 return;
             }
         }
-
-        System.out.println("\nOptional parallel-stream batch demo...");
-        List<Runnable> batchTasks = List.of(
-                () -> runBatchTask(primaryAccount, "Deposit", 125.00, consoleLock),
-                () -> runBatchTask(primaryAccount, "Withdrawal", 60.00, consoleLock),
-                () -> runBatchTask(secondaryAccount, "Deposit", 85.00, consoleLock),
-                () -> runBatchTask(secondaryAccount, "Withdrawal", 40.00, consoleLock));
-        batchTasks.parallelStream().forEach(Runnable::run);
-
-        System.out.println("\n✓ Thread-safe operations completed successfully");
-        System.out.println("Final balances after simulation:");
-        System.out.printf("%s -> $%.2f%n", primaryAccount.getAccountNumber(), primaryAccount.getBalance());
-        System.out.printf("%s -> $%.2f%n", secondaryAccount.getAccountNumber(), secondaryAccount.getBalance());
-        System.out.println("Press Enter to return to the menu...");
-        inputHandler.waitForEnter();
     }
 
-    private static void simulateTransactions(Account account, String type, Object consoleLock, int iterations) {
+    /**
+     * Executes concurrent operations using parallel streams
+     */
+    private static void runWithParallelStreams(int operationChoice, Account primaryAccount,
+                                               Account secondaryAccount, Object consoleLock) {
+        List<Runnable> tasks = new ArrayList<>();
+
+        switch (operationChoice) {
+            case 1: // Concurrent Deposits
+                tasks.add(() -> runBatchTask(primaryAccount, "Deposit", 150.00, null, consoleLock, "Stream-1"));
+                tasks.add(() -> runBatchTask(primaryAccount, "Deposit", 200.00, null, consoleLock, "Stream-2"));
+                tasks.add(() -> runBatchTask(secondaryAccount, "Deposit", 120.00, null, consoleLock, "Stream-3"));
+                break;
+
+            case 2: // Concurrent Withdrawals
+                tasks.add(() -> runBatchTask(primaryAccount, "Withdrawal", 100.00, null, consoleLock, "Stream-1"));
+                tasks.add(() -> runBatchTask(primaryAccount, "Withdrawal", 75.00, null, consoleLock, "Stream-2"));
+                tasks.add(() -> runBatchTask(secondaryAccount, "Withdrawal", 50.00, null, consoleLock, "Stream-3"));
+                break;
+
+            case 3: // Concurrent Transfers
+                tasks.add(() -> runBatchTask(primaryAccount, "Transfer", 100.00, secondaryAccount, consoleLock, "Stream-1"));
+                tasks.add(() -> runBatchTask(secondaryAccount, "Transfer", 80.00, primaryAccount, consoleLock, "Stream-2"));
+                tasks.add(() -> runBatchTask(primaryAccount, "Transfer", 120.00, secondaryAccount, consoleLock, "Stream-3"));
+                break;
+
+            case 4: // Mixed Operations
+                tasks.add(() -> runBatchTask(primaryAccount, "Deposit", 125.00, null, consoleLock, "Stream-1"));
+                tasks.add(() -> runBatchTask(primaryAccount, "Withdrawal", 60.00, null, consoleLock, "Stream-2"));
+                tasks.add(() -> runBatchTask(primaryAccount, "Transfer", 100.00, secondaryAccount, consoleLock, "Stream-3"));
+                break;
+        }
+
+        tasks.parallelStream().forEach(Runnable::run);
+    }
+
+    private static void simulateTransactions(Account account, String type, Account targetAccount,
+                                            Object consoleLock, int iterations) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         for (int i = 0; i < iterations; i++) {
             double min = type.equalsIgnoreCase("Deposit") ? 25.0 : 15.0;
@@ -549,24 +535,51 @@ public class Main {
             // Synchronize to ensure we get the balance immediately after the transaction
             boolean success;
             double balance;
-            synchronized (account) {
-                success = account.processTransaction(amount, type);
-                balance = account.getBalance();
-                // While processTransaction() and getBalance() are individually thread-safe,
-                // there's a race condition between these two method calls
-                // another thread could modify the balance after processTransaction() but before getBalance().
+
+            if (type.equalsIgnoreCase("Transfer") && targetAccount != null) {
+                synchronized (account) {
+                    success = account.processTransaction(amount, type, targetAccount);
+                    balance = account.getBalance();
+                }
+            } else {
+                synchronized (account) {
+                    success = account.processTransaction(amount, type);
+                    balance = account.getBalance();
+                    // While processTransaction() and getBalance() are individually thread-safe,
+                    // there's a race condition between these two method calls
+                    // another thread could modify the balance after processTransaction() but before getBalance().
+                }
             }
 
             synchronized (consoleLock) {
-                String verb = type.equalsIgnoreCase("Deposit") ? "depositing" : "withdrawing";
-                System.out.printf("[%s] %s %s $%.2f -> balance $%.2f (%s)%n",
-                        Thread.currentThread().getName(),
-                        account.getAccountNumber(),
-                        verb,
-                        amount,
-                        balance,
-                        success ? "ok" : "rejected");
+                String verb, prep;
+                if (type.equalsIgnoreCase("Deposit")) {
+                    verb = "depositing";
+                    prep = "to";
+                    System.out.printf("[%s] %s $%.2f %s account %s\n",
+                            Thread.currentThread().getName(),
+                            verb,
+                            amount,
+                            prep,
+                            account.getAccountNumber());
+                } else if (type.equalsIgnoreCase("Withdrawal")) {
+                    verb = "withdrawing";
+                    prep = "from";
+                    System.out.printf("[%s] %s $%.2f %s account %s\n",
+                            Thread.currentThread().getName(),
+                            verb,
+                            amount,
+                            prep,
+                            account.getAccountNumber());
+                } else if (type.equalsIgnoreCase("Transfer") && targetAccount != null) {
+                    System.out.printf("[%s] transferring $%.2f from account %s to %s\n",
+                            Thread.currentThread().getName(),
+                            amount,
+                            account.getAccountNumber(),
+                            targetAccount.getAccountNumber());
+                }
             }
+
             try {
                 Thread.sleep(random.nextInt(40, 120));
             } catch (InterruptedException e) {
@@ -576,24 +589,42 @@ public class Main {
         }
     }
 
-    private static void runBatchTask(Account account, String type, double amount, Object consoleLock) {
+    private static void runBatchTask(Account account, String type, double amount, Account targetAccount,
+                                    Object consoleLock, String threadName) {
         // Synchronize to ensure we get the balance immediately after the transaction
         boolean success;
         double balance;
-        synchronized (account) {
-            success = account.processTransaction(amount, type);
-            balance = account.getBalance();
+
+        if (type.equalsIgnoreCase("Transfer") && targetAccount != null) {
+            synchronized (account) {
+                success = account.processTransaction(amount, type, targetAccount);
+                balance = account.getBalance();
+            }
+        } else {
+            synchronized (account) {
+                success = account.processTransaction(amount, type);
+                balance = account.getBalance();
+            }
         }
 
         synchronized (consoleLock) {
-            String verb = type.equalsIgnoreCase("Deposit") ? "deposited" : "withdrew";
-            System.out.printf("[parallel-%s] %s %s $%.2f -> balance $%.2f (%s)%n",
-                    Thread.currentThread().getName(),
-                    account.getAccountNumber(),
-                    verb,
-                    amount,
-                    balance,
-                    success ? "ok" : "rejected");
+            if (type.equalsIgnoreCase("Deposit")) {
+                System.out.printf("[%s] depositing $%.2f to account %s\n",
+                        threadName,
+                        amount,
+                        account.getAccountNumber());
+            } else if (type.equalsIgnoreCase("Withdrawal")) {
+                System.out.printf("[%s] withdrawing $%.2f from account %s\n",
+                        threadName,
+                        amount,
+                        account.getAccountNumber());
+            } else if (type.equalsIgnoreCase("Transfer") && targetAccount != null) {
+                System.out.printf("[%s] transferring $%.2f from account %s to %s\n",
+                        threadName,
+                        amount,
+                        account.getAccountNumber(),
+                        targetAccount.getAccountNumber());
+            }
         }
     }
 
