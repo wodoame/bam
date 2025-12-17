@@ -40,7 +40,7 @@ public class InputValidator {
 
     public void validateEmail(String email) {
         if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
-            throw new InvalidEmailException("Invalid email format. Example: user@example.com");
+            throw new InvalidEmailException("Invalid email format. Please enter a valid address (e.g, name@example.com)");
         }
     }
 

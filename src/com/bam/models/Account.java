@@ -151,9 +151,7 @@ public abstract class Account implements Transactable {
         }
         if (type.equalsIgnoreCase("withdrawal")) {
             try {
-                boolean res = withdraw(amount);
-                System.out.println("Withdrawal successful.");
-                return res;
+                return withdraw(amount);
             } catch (InsufficientFundsException | InvalidWithdrawalAmountException | OverdraftExceededException e) {
                 System.out.println(e.getMessage());
             }

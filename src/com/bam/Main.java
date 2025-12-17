@@ -483,8 +483,7 @@ public class Main {
      * Runs a visual simulation showing concurrent transactions in action.
      */
     private static void runVisualSimulation() {
-        System.out.println("\n=== Visual Concurrent Transaction Simulation ===");
-        System.out.println("Creating test accounts for simulation...");
+        System.out.println("Running concurrent transaction simulation...");
 
         // Create deterministic test accounts for simulation
         Customer customer1 = new RegularCustomer("Alice Smith", 30, "555-0101", "alice@example.com", "123 Main St");
@@ -501,16 +500,17 @@ public class Main {
                 secondaryAccount.getAccountNumber(),
                 secondaryAccount.getCustomer().getName(),
                 secondaryAccount.getBalance());
+        System.out.println();
 
         Object consoleLock = new Object();
         List<Thread> workers = new ArrayList<>();
-        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", consoleLock, 5), "P-Deposit-1"));
-        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Withdrawal", consoleLock, 5), "P-Withdraw-1"));
-        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", consoleLock, 5), "P-Deposit-2"));
+        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", consoleLock, 5), "Thread-1"));
+        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Withdrawal", consoleLock, 5), "Thread-2"));
+        workers.add(new Thread(() -> simulateTransactions(primaryAccount, "Deposit", consoleLock, 5), "Thread-3"));
         workers.add(new Thread(() -> simulateTransactions(secondaryAccount, "Withdrawal", consoleLock, 5),
-                "S-Withdraw-1"));
+                "Thread-4"));
         workers.add(new Thread(() -> simulateTransactions(secondaryAccount, "Deposit", consoleLock, 5),
-                "S-Deposit-1"));
+                "Thread-5"));
 
         workers.forEach(Thread::start);
         for (Thread worker : workers) {
@@ -531,7 +531,8 @@ public class Main {
                 () -> runBatchTask(secondaryAccount, "Withdrawal", 40.00, consoleLock));
         batchTasks.parallelStream().forEach(Runnable::run);
 
-        System.out.println("\nFinal balances after simulation:");
+        System.out.println("\n✓ Thread-safe operations completed successfully");
+        System.out.println("Final balances after simulation:");
         System.out.printf("%s -> $%.2f%n", primaryAccount.getAccountNumber(), primaryAccount.getBalance());
         System.out.printf("%s -> $%.2f%n", secondaryAccount.getAccountNumber(), secondaryAccount.getBalance());
         System.out.println("Press Enter to return to the menu...");
@@ -557,7 +558,7 @@ public class Main {
             }
 
             synchronized (consoleLock) {
-                String verb = type.equalsIgnoreCase("Deposit") ? "deposited" : "withdrew";
+                String verb = type.equalsIgnoreCase("Deposit") ? "depositing" : "withdrawing";
                 System.out.printf("[%s] %s %s $%.2f -> balance $%.2f (%s)%n",
                         Thread.currentThread().getName(),
                         account.getAccountNumber(),
