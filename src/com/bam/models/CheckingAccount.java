@@ -1,5 +1,7 @@
 package com.bam.models;
 
+import com.bam.exceptions.InvalidWithdrawalAmountException;
+import com.bam.exceptions.OverdraftExceededException;
 import com.bam.utils.InputValidator;
 
 
@@ -55,7 +57,7 @@ public class CheckingAccount extends Account {
      * @return {@code true} when the withdrawal succeeds
      */
     @Override
-    public boolean withdraw(double amount) {
+    public boolean withdraw(double amount) throws OverdraftExceededException, InvalidWithdrawalAmountException {
         InputValidator validator = new InputValidator();
         synchronized (this) {
             validator.validateCheckingWithdrawal(amount, balance);

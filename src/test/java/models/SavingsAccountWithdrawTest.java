@@ -13,7 +13,7 @@ class SavingsAccountWithdrawTest extends AccountTestBase {
     void withdrawWithinLimitsSucceeds() {
         SavingsAccount account = new SavingsAccount(regularCustomer, 1000);
 
-        boolean result = account.withdraw(300);
+        boolean result = account.processTransaction(300, "withdrawal");
 
         assertTrue(result);
         assertEquals(700, account.getBalance());
@@ -39,7 +39,7 @@ class SavingsAccountWithdrawTest extends AccountTestBase {
         // Initial deposit 1000, Minimum balance 500
         SavingsAccount account = new SavingsAccount(regularCustomer, 1000);
         // Withdraw 500, remaining should be 500 (Minimum Balance)
-        boolean result = account.withdraw(500);
+        boolean result = account.processTransaction(500, "withdrawal");
         assertTrue(result);
         assertEquals(500, account.getBalance());
         assertEquals(SavingsAccount.MINIMUM_BALANCE, account.getBalance());

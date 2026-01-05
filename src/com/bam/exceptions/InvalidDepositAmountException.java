@@ -1,6 +1,6 @@
 package com.bam.exceptions;
 
-public class InvalidDepositAmountException extends RuntimeException {
+public class InvalidDepositAmountException extends Exception {
     public InvalidDepositAmountException(String message) {
         super(message);
     }
