@@ -13,7 +13,7 @@ class CheckingAccountWithdrawTest extends AccountTestBase {
     void withdrawWithinBalanceSucceeds() {
         CheckingAccount account = new CheckingAccount(regularCustomer, 500);
 
-        boolean result = account.withdraw(200);
+        boolean result = account.processTransaction(200, "withdrawal");
 
         assertTrue(result);
         assertEquals(300, account.getBalance());
@@ -23,7 +23,7 @@ class CheckingAccountWithdrawTest extends AccountTestBase {
     void withdrawWithinOverdraftLimitSucceeds() {
         CheckingAccount account = new CheckingAccount(regularCustomer, 100);
 
-        boolean result = account.withdraw(900);
+        boolean result = account.processTransaction(900, "withdrawal");
 
         assertTrue(result);
         assertEquals(-800, account.getBalance());
@@ -49,7 +49,7 @@ class CheckingAccountWithdrawTest extends AccountTestBase {
     @Test
     void withdrawExactBalanceLeavesZero() {
         CheckingAccount account = new CheckingAccount(regularCustomer, 500);
-        boolean result = account.withdraw(500);
+        boolean result = account.processTransaction(500, "withdrawal");
         assertTrue(result);
         assertEquals(0, account.getBalance());
     }
@@ -58,7 +58,7 @@ class CheckingAccountWithdrawTest extends AccountTestBase {
     void withdrawExactOverdraftLimitLeavesNegativeLimit() {
         CheckingAccount account = new CheckingAccount(regularCustomer, 0);
         // Overdraft limit is 1000. Balance 0 - 1000 = -1000
-        boolean result = account.withdraw(CheckingAccount.OVERDRAFT_LIMIT);
+        boolean result = account.processTransaction(CheckingAccount.OVERDRAFT_LIMIT, "withdrawal");
         assertTrue(result);
         assertEquals(-CheckingAccount.OVERDRAFT_LIMIT, account.getBalance());
     }

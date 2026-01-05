@@ -1,5 +1,7 @@
 package com.bam.models;
 
+import com.bam.exceptions.InsufficientFundsException;
+import com.bam.exceptions.InvalidWithdrawalAmountException;
 import com.bam.utils.InputValidator;
 
 /**
@@ -55,7 +57,7 @@ public class SavingsAccount extends Account {
      * @return {@code true} when the withdrawal succeeds
      */
     @Override
-    public boolean withdraw(double amount) {
+    public boolean withdraw(double amount) throws InsufficientFundsException, InvalidWithdrawalAmountException {
         InputValidator validator = new InputValidator();
         synchronized (this) {
             validator.validateSavingsWithdrawal(amount, balance);
@@ -69,7 +71,7 @@ public class SavingsAccount extends Account {
      */
     public void calculateInterest() {
         double interest = balance * (interestRate / 100);
-        deposit(interest);
+        processTransaction(interest, "deposit");
         System.out.println("Interest calculated and added: $" + interest);
     }
 

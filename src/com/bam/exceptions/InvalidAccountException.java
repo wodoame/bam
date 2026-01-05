@@ -1,6 +1,6 @@
 package com.bam.exceptions;
 
-public class InvalidAccountException extends RuntimeException {
+public class InvalidAccountException extends Exception {
     public InvalidAccountException(String message) {
         super(message);
     }

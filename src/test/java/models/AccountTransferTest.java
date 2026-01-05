@@ -15,7 +15,7 @@ class AccountTransferTest extends AccountTestBase {
         CheckingAccount checking = new CheckingAccount(regularCustomer, 1000);
         SavingsAccount savings = new SavingsAccount(regularCustomer, 500);
 
-        checking.transfer(savings, 200);
+        checking.processTransaction(200, "transfer", savings );
 
         assertEquals(800, checking.getBalance());
         assertEquals(700, savings.getBalance());
@@ -47,7 +47,7 @@ class AccountTransferTest extends AccountTestBase {
         CheckingAccount checking = new CheckingAccount(regularCustomer, 500);
 
         // Savings min is 500. Transfer 200 => 800 (OK)
-        savings.transfer(checking, 200);
+        savings.processTransaction(200, "transfer", checking);
 
         assertEquals(800, savings.getBalance());
         assertEquals(700, checking.getBalance());
@@ -59,7 +59,7 @@ class AccountTransferTest extends AccountTestBase {
         SavingsAccount savings = new SavingsAccount(regularCustomer, 500);
 
         // Transfer 200. Balance became -100. Overdraft limit 1000. OK.
-        checking.transfer(savings, 200);
+        checking.processTransaction(200, "transfer", savings);
 
         assertEquals(-100, checking.getBalance());
         assertEquals(700, savings.getBalance());

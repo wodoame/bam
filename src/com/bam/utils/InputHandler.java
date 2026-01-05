@@ -98,7 +98,7 @@ public class InputHandler {
                  validator.validateAccountNumberFormat(accountNumber);
                  account = acm.findAccount(accountNumber);
                  return account;
-            } catch (InvalidAccountException | InvalidAccountNumberException e) {
+            } catch (InvalidAccountNumberException | InvalidAccountException e) {
                 System.out.println(e.getMessage());
             }
         }

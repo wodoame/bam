@@ -90,14 +90,14 @@ public class InputValidator {
     }
 
     /** Ensures deposits are positive. */
-    public void validateDepositAmount(double amount) {
+    public void validateDepositAmount(double amount) throws InvalidDepositAmountException {
         if (amount <= 0) {
             throw new InvalidDepositAmountException("Deposit amount must be greater than zero.");
         }
     }
 
     /** Validates withdrawal limits for savings accounts, enforcing minimum balance. */
-    public void validateSavingsWithdrawal(double amount, double currentBalance) {
+    public void validateSavingsWithdrawal(double amount, double currentBalance) throws InsufficientFundsException, InvalidWithdrawalAmountException {
         if (amount <= 0) {
             throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");
         }
@@ -111,7 +111,7 @@ public class InputValidator {
     }
 
     /** Validates withdrawal limits for checking accounts, allowing overdraft up to limit. */
-    public void validateCheckingWithdrawal(double amount, double currentBalance) {
+    public void validateCheckingWithdrawal(double amount, double currentBalance) throws OverdraftExceededException, InvalidWithdrawalAmountException {
         if (amount <= 0) {
             throw new InvalidWithdrawalAmountException("Withdrawal amount must be greater than zero.");
         }

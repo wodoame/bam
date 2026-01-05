@@ -1,9 +1,6 @@
 package com.bam.models;
 
-import com.bam.exceptions.InvalidWithdrawalAmountException;
-import com.bam.exceptions.InsufficientFundsException;
-import com.bam.exceptions.OverdraftExceededException;
-import com.bam.exceptions.InvalidAccountException;
+import com.bam.exceptions.*;
 import com.bam.interfaces.Transactable;
 import com.bam.utils.InputValidator;
 
@@ -73,7 +70,7 @@ public abstract class Account implements Transactable {
      * @param amount amount to add
      * @return {@code true} when the deposit succeeds
      */
-    public boolean deposit(double amount) {
+    public boolean deposit(double amount) throws InvalidDepositAmountException {
         InputValidator validator = new InputValidator();
         validator.validateDepositAmount(amount);
         synchronized (balanceLock) {
@@ -88,7 +85,7 @@ public abstract class Account implements Transactable {
      * @param amount amount to subtract
      * @return {@code true} when the withdrawal succeeds
      */
-    public abstract boolean withdraw(double amount);
+    public abstract boolean withdraw(double amount) throws InsufficientFundsException, OverdraftExceededException, InvalidWithdrawalAmountException;
 
     /**
      * Transfers funds to the target account after validating both accounts.
@@ -96,7 +93,7 @@ public abstract class Account implements Transactable {
      * @param targetAccount destination account
      * @param amount        amount to move
      */
-    public void transfer(Account targetAccount, double amount) {
+    public void transfer(Account targetAccount, double amount) throws InsufficientFundsException, OverdraftExceededException, InvalidWithdrawalAmountException, InvalidDepositAmountException, InvalidAccountException {
         if (targetAccount == null) {
             throw new InvalidAccountException("Target account cannot be null");
         }
@@ -147,7 +144,11 @@ public abstract class Account implements Transactable {
     @Override
     public boolean processTransaction(double amount, String type) {
         if (type.equalsIgnoreCase("deposit")) {
-            return deposit(amount);
+            try {
+                return deposit(amount);
+            } catch (InvalidDepositAmountException e) {
+                System.out.println(e.getMessage());
+            }
         }
         if (type.equalsIgnoreCase("withdrawal")) {
             try {
@@ -167,8 +168,8 @@ public abstract class Account implements Transactable {
             try {
                 transfer(targetAccount, amount);
                 return true;
-            } catch (InvalidAccountException | InsufficientFundsException | InvalidWithdrawalAmountException
-                    | OverdraftExceededException e) {
+            } catch (InvalidAccountException | InsufficientFundsException | InvalidWithdrawalAmountException |
+                     OverdraftExceededException | InvalidDepositAmountException e) {
                 System.out.println(e.getMessage());
             }
         }
