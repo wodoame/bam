@@ -93,7 +93,7 @@ public abstract class Account implements Transactable {
      * @param targetAccount destination account
      * @param amount        amount to move
      */
-    public void transfer(Account targetAccount, double amount) throws InsufficientFundsException, OverdraftExceededException, InvalidWithdrawalAmountException, InvalidDepositAmountException {
+    public void transfer(Account targetAccount, double amount) throws InsufficientFundsException, OverdraftExceededException, InvalidWithdrawalAmountException, InvalidDepositAmountException, InvalidAccountException {
         if (targetAccount == null) {
             throw new InvalidAccountException("Target account cannot be null");
         }

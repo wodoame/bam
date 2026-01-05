@@ -70,7 +70,7 @@ public class AccountManager {
      *
      * @throws InvalidAccountException when the account does not exist
      */
-    public Account findAccount(String accountNumber) {
+    public Account findAccount(String accountNumber) throws InvalidAccountException {
         validator.validateAccountNumberFormat(accountNumber);
         Account account = accountLookup.get(accountNumber);
         if (account == null) {
