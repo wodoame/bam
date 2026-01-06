@@ -95,10 +95,9 @@ public class InputHandler {
         while (true) {
             accountNumber = getStringInput(prompt);
             try {
-                 validator.validateAccountNumberFormat(accountNumber);
                  account = acm.findAccount(accountNumber);
                  return account;
-            } catch (InvalidAccountNumberException | InvalidAccountException e) {
+            } catch (InvalidAccountException | InvalidAccountNumberException e) {
                 System.out.println(e.getMessage());
             }
         }

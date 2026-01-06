@@ -1,6 +1,7 @@
 package com.bam.services;
 
 import com.bam.exceptions.InvalidAccountException;
+import com.bam.exceptions.InvalidAccountNumberException;
 import com.bam.models.Account;
 import com.bam.models.CheckingAccount;
 import com.bam.models.Customer;
@@ -70,7 +71,7 @@ public class AccountManager {
      *
      * @throws InvalidAccountException when the account does not exist
      */
-    public Account findAccount(String accountNumber) throws InvalidAccountException {
+    public Account findAccount(String accountNumber) throws InvalidAccountException, InvalidAccountNumberException {
         validator.validateAccountNumberFormat(accountNumber);
         Account account = accountLookup.get(accountNumber);
         if (account == null) {

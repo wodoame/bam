@@ -124,7 +124,7 @@ public class InputValidator {
     }
 
     /** Validates the format of account numbers. */
-    public void validateAccountNumberFormat(String accountNumber) {
+    public void validateAccountNumberFormat(String accountNumber) throws InvalidAccountNumberException {
         if (accountNumber == null || !ACCOUNT_NUMBER_PATTERN.matcher(accountNumber).matches()) {
             throw new InvalidAccountNumberException("Account number must match ACC followed by three digits (e.g., ACC123).");
         }

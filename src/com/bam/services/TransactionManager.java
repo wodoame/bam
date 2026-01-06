@@ -1,5 +1,6 @@
 package com.bam.services;
 
+import com.bam.exceptions.InvalidAccountNumberException;
 import com.bam.models.Account;
 import com.bam.models.CheckingAccount;
 import com.bam.models.Transaction;
@@ -123,7 +124,11 @@ public class TransactionManager {
      * Displays the transaction history for a single account, including sorting prompt.
      */
     public void viewTransactionsByAccount(String accountNumber) {
-        validator.validateAccountNumberFormat(accountNumber);
+        try {
+            validator.validateAccountNumberFormat(accountNumber);
+        } catch (InvalidAccountNumberException e) {
+            System.out.println(e.getMessage());
+        }
         System.out.println("TRANSACTION HISTORY FOR ACCOUNT NUMBER " + accountNumber);
         final List<Transaction> accountTransactions = getTransactions(accountNumber);
         final List<Transaction> sortedTransactions = sortTransactions(accountTransactions);
@@ -151,7 +156,11 @@ public class TransactionManager {
      * Prints a rich statement for the provided account, including transactions and summary.
      */
     public void generateStatement(com.bam.models.Account account) {
-        validator.validateAccountNumberFormat(account.getAccountNumber());
+        try {
+            validator.validateAccountNumberFormat(account.getAccountNumber());
+        } catch (InvalidAccountNumberException e) {
+            System.out.println(e.getMessage());
+        }
         String accountNumber = account.getAccountNumber();
         System.out.println("\n" + "=".repeat(70));
         System.out.println("ACCOUNT STATEMENT");

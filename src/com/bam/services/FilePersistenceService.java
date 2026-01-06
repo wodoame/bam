@@ -1,5 +1,6 @@
 package com.bam.services;
 
+import com.bam.exceptions.InvalidAccountNumberException;
 import com.bam.models.*;
 import com.bam.utils.InputValidator;
 
@@ -114,7 +115,11 @@ public class FilePersistenceService {
         String status = parts[3];
         Customer customer = getCustomer(parts);
 
-        validator.validateAccountNumberFormat(accountNumber);
+        try {
+            validator.validateAccountNumberFormat(accountNumber);
+        } catch (InvalidAccountNumberException e) {
+            System.out.println(e.getMessage());
+        }
         validator.validateContact(customer.getContact());
         validator.validateEmail(customer.getEmail());
 
