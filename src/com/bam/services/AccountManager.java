@@ -22,7 +22,6 @@ import java.util.Random;
  * Coordinates all account CRUD operations, persistence, and initial data seeding.
  */
 public class AccountManager {
-    private final ArrayList<Account> accounts;
     private final Map<String, Account> accountLookup;
     private final InputHandler inputHandler;
     private final FilePersistenceService filePersistenceService;
@@ -33,7 +32,6 @@ public class AccountManager {
      * Creates a manager with interactive input handling and transaction coordination.
      */
     public AccountManager(InputHandler inputHandler, TransactionManager transactionManager) {
-        this.accounts = new ArrayList<>();
         this.accountLookup = new HashMap<>();
         this.inputHandler = inputHandler;
         this.transactionManager = transactionManager;
@@ -56,7 +54,6 @@ public class AccountManager {
             throw new IllegalArgumentException(
                     "Account number " + account.getAccountNumber() + " already exists.");
         }
-        accounts.add(account);
         if (!silent) {
             System.out.println("\nAccount created successfully!");
             account.displayAccountDetails();
@@ -92,7 +89,7 @@ public class AccountManager {
         System.out.println(divider);
         System.out.printf(headerFormat, "ACC NO", "CUSTOMER NAME", "TYPE", "BALANCE", "STATUS");
         System.out.println(divider);
-        accounts.stream()
+        accountLookup.values().stream()
                 .sorted(Comparator.comparing(Account::getAccountNumber))
                 .forEach(account -> {
                     // For checking accounts, show balance + overdraft limit
@@ -138,7 +135,7 @@ public class AccountManager {
                     // Add row separator after each account
                     System.out.println(divider);
                 });
-        System.out.println("Total Accounts: " + accounts.size());
+        System.out.println("Total Accounts: " + accountLookup.size());
         System.out.printf("Total Bank Balance: $%.2f%n", getTotalBalance());
         System.out.println("\nPress Enter to continue...");
         inputHandler.waitForEnter();
@@ -148,7 +145,7 @@ public class AccountManager {
      * @return aggregate balance across all accounts.
      */
     public double getTotalBalance() {
-        return accounts.stream().mapToDouble(Account::getBalance).sum();
+        return accountLookup.values().stream().mapToDouble(Account::getBalance).sum();
     }
 
     /**
@@ -187,12 +184,12 @@ public class AccountManager {
 
     /** @return live count of managed accounts. */
     public int getAccountCount() {
-        return accounts.size();
+        return accountLookup.size();
     }
 
     /** @return defensive copy of the current accounts list. */
     public ArrayList<Account> getAccountsSnapshot() {
-        return new ArrayList<>(accounts);
+        return new ArrayList<>(accountLookup.values());
     }
 
     /**
@@ -202,19 +199,17 @@ public class AccountManager {
         try {
             var loadedAccounts = filePersistenceService.loadAccounts();
             var loadedTransactions = filePersistenceService.loadTransactions();
-            accounts.clear();
             accountLookup.clear();
-            loadedAccounts.forEach(account -> {
-                accounts.add(account);
-                accountLookup.put(account.getAccountNumber(), account);
-            });
+            loadedAccounts.forEach(account ->
+                accountLookup.put(account.getAccountNumber(), account)
+            );
             TransactionManager.seedTransactions(loadedTransactions);
             syncCounters();
-            if (accounts.isEmpty()) {
+            if (accountLookup.isEmpty()) {
                 System.out.println("No persisted accounts found. Generating seed data...");
                 generateSeedAccounts(transactionManager);
             } else {
-                System.out.printf("Loaded %d accounts and %d transactions from disk.%n", accounts.size(), loadedTransactions.size());
+                System.out.printf("Loaded %d accounts and %d transactions from disk.%n", accountLookup.size(), loadedTransactions.size());
             }
         } catch (IOException e) {
             System.out.println("Failed to load persisted data: " + e.getMessage());
@@ -237,18 +232,16 @@ public class AccountManager {
         try {
             var loadedAccounts = filePersistenceService.loadAccounts();
             var loadedTransactions = filePersistenceService.loadTransactions();
-            accounts.clear();
             accountLookup.clear();
-            loadedAccounts.forEach(account -> {
-                accounts.add(account);
-                accountLookup.put(account.getAccountNumber(), account);
-            });
+            loadedAccounts.forEach(account ->
+                accountLookup.put(account.getAccountNumber(), account)
+            );
             TransactionManager.seedTransactions(loadedTransactions);
             syncCounters();
-            if (accounts.isEmpty()) {
+            if (accountLookup.isEmpty()) {
                 return false;
             }
-            System.out.printf("Loaded %d accounts and %d transactions from disk.%n", accounts.size(), loadedTransactions.size());
+            System.out.printf("Loaded %d accounts and %d transactions from disk.%n", accountLookup.size(), loadedTransactions.size());
             return true;
         } catch (IOException e) {
             System.out.println("Failed to load persisted data: " + e.getMessage());
@@ -257,7 +250,7 @@ public class AccountManager {
     }
 
     private void syncCounters() {
-        int maxAccount = accounts.stream()
+        int maxAccount = accountLookup.values().stream()
                 .map(Account::getAccountNumber)
                 .map(str -> str.replace("ACC", ""))
                 .mapToInt(Integer::parseInt)
@@ -265,7 +258,7 @@ public class AccountManager {
                 .orElse(0);
         Account.setAccountCounter(maxAccount + 1);
 
-        int maxCustomer = accounts.stream()
+        int maxCustomer = accountLookup.values().stream()
                 .map(Account::getCustomer)
                 .map(Customer::getCustomerId)
                 .map(id -> id.replace("CUST", ""))
@@ -280,7 +273,7 @@ public class AccountManager {
      */
     public void saveAllData() {
         try {
-            filePersistenceService.saveAccounts(accounts);
+            filePersistenceService.saveAccounts(new ArrayList<>(accountLookup.values()));
             filePersistenceService.saveTransactions(TransactionManager.allTransactions());
             System.out.println("Data saved successfully.");
         } catch (IOException e) {

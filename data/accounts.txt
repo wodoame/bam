@@ -1,13 +1,2 @@
-ACC001|Checking|1731.1789286447224|Active|Regular|CUST001|Bernard|30|0123456789|bernard@example.com|Accra, Ghana|1000.0
-ACC002|Savings|752.7109960451614|Active|Regular|CUST002|Alice|30|0123456789|alice@example.com|Accra, Ghana|3.5
-ACC003|Checking|1821.3936592869545|Active|Regular|CUST003|John|30|0123456789|john@example.com|Accra, Ghana|1000.0
-ACC004|Savings|935.6253850206449|Active|Regular|CUST004|Diana|30|0123456789|diana@example.com|Accra, Ghana|3.5
-ACC005|Checking|687.1257295091973|Active|Regular|CUST005|Eve|30|0123456789|eve@example.com|Accra, Ghana|1000.0
-ACC006|Savings|1807.4945291999065|Active|Regular|CUST006|Frank|30|0123456789|frank@example.com|Accra, Ghana|3.5
-ACC007|Checking|1430.3372179299727|Active|Regular|CUST007|Grace|30|0123456789|grace@example.com|Accra, Ghana|1000.0
-ACC008|Savings|1561.6202533586966|Active|Regular|CUST008|Hank|30|0123456789|hank@example.com|Accra, Ghana|3.5
-ACC009|Checking|1798.5437525575123|Active|Regular|CUST009|Ivy|30|0123456789|ivy@example.com|Accra, Ghana|1000.0
-ACC010|Checking|528.4969278722428|Active|Regular|CUST010|Jack|30|0123456789|jack@example.com|Accra, Ghana|1000.0
-ACC011|Savings|500.0|Active|Regular|CUST011|Bernard|22|3333333333|bmwodoame@gmail.com|Accra.com|3.5
-ACC012|Savings|500.0|Active|Regular|CUST012|Random Person|22|2222222222|randomperson@gmail.com|Tse Addo|3.5
-ACC013|Savings|700.0|Active|Regular|CUST013|Cardi B|33|7777777777|cardib.real@yahoo.com|Some|3.5
+ACC001|Savings|1200.0|Active|Regular|CUST001|Bernard Wodoame|22|2222222222|bmwodoame@gmail.com|Tse Addo|3.5
+ACC002|Checking|-200.0|Active|Regular|CUST002|Miriam|24|4444444444|mmwodoame@yahoo.com|badb|1000.0
